@@ -33,10 +33,21 @@ bun install
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `CROSMOS_API_BASE_URL` | Base URL for the Crosmos Memory API | `http://localhost:8000` |
+| `CROSMOS_API_KEY` | API key for authentication (required) | - |
 | `CROSMOS_API_TIMEOUT` | Request timeout in milliseconds | `30000` |
 | `DEFAULT_SPACE_ID` | Default memory space ID | `1` |
 | `PORT` | HTTP server port (HTTP mode only) | `3000` |
 | `HOST` | HTTP server host (HTTP mode only) | `0.0.0.0` |
+
+### Authentication
+
+The MCP server requires an API key to authenticate with the Crosmos Memory Engine. Each user's API key provides access to their own memory space.
+
+**To get your API key:**
+1. Log in to your Crosmos dashboard
+2. Navigate to Settings → API Keys
+3. Create a new API key (format: `csk_...`)
+4. Copy the key and set it as `CROSMOS_API_KEY`
 
 ## Usage
 
@@ -62,7 +73,8 @@ bunx crosmos-mcp
       "command": "npx",
       "args": ["crosmos-mcp"],
       "env": {
-        "CROSMOS_API_BASE_URL": "https://memory.iiviie.dev"
+        "CROSMOS_API_BASE_URL": "https://memory.iiviie.dev",
+        "CROSMOS_API_KEY": "csk_your_api_key_here"
       }
     }
   }
@@ -77,7 +89,8 @@ bunx crosmos-mcp
       "type": "local",
       "command": ["bun", "run", "/path/to/crosmos-mcp/src/stdio.ts"],
       "environment": {
-        "CROSMOS_API_BASE_URL": "https://memory.iiviie.dev"
+        "CROSMOS_API_BASE_URL": "https://memory.iiviie.dev",
+        "CROSMOS_API_KEY": "csk_your_api_key_here"
       }
     }
   }
@@ -94,7 +107,7 @@ Uses HTTP/SSE transport. Host on any server.
 bun run dev:http
 
 # Production
-PORT=3000 HOST=0.0.0.0 CROSMOS_API_BASE_URL=https://memory.iiviie.dev bun run start:http
+PORT=3000 HOST=0.0.0.0 CROSMOS_API_BASE_URL=https://memory.iiviie.dev CROSMOS_API_KEY=csk_your_key bun run start:http
 ```
 
 **Endpoints:**
@@ -171,10 +184,13 @@ The server communicates with these Crosmos Memory Engine endpoints:
 
 1. **Deploy Memory Engine** to `memory.iiviie.dev`
 2. **Deploy MCP HTTP Server** to `mcp.iiviie.dev`:
-   ```bash
-   docker build -t crosmos-mcp .
-   docker run -p 3000:3000 -e CROSMOS_API_BASE_URL=https://memory.iiviie.dev crosmos-mcp
-   ```
+    ```bash
+    docker build -t crosmos-mcp .
+    docker run -p 3000:3000 \
+      -e CROSMOS_API_BASE_URL=https://memory.iiviie.dev \
+      -e CROSMOS_API_KEY=csk_your_key \
+      crosmos-mcp
+    ```
 3. **Publish npm package**:
    ```bash
    npm publish
@@ -189,6 +205,7 @@ COPY package.json bun.lockb ./
 RUN bun install --frozen-lockfile --production
 COPY dist ./dist
 ENV CROSMOS_API_BASE_URL=https://memory.iiviie.dev
+ENV CROSMOS_API_KEY=csk_your_key
 EXPOSE 3000
 CMD ["bun", "run", "dist/http.js"]
 ```

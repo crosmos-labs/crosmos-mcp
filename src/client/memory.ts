@@ -9,24 +9,32 @@ import type {
 export class MemoryClient {
   private readonly baseUrl: string;
   private readonly timeout: number;
+  private readonly apiKey: string | undefined;
 
-  constructor(baseUrl?: string, timeout?: number) {
+  constructor(baseUrl?: string, timeout?: number, apiKey?: string) {
     this.baseUrl = baseUrl ?? config.api.baseUrl;
     this.timeout = timeout ?? config.api.timeout;
+    this.apiKey = apiKey ?? config.api.apiKey;
   }
 
   private async request<T>(url: string, options: RequestInit): Promise<T> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      ...(options.headers as Record<string, string>),
+    };
+
+    if (this.apiKey) {
+      headers.Authorization = `Bearer ${this.apiKey}`;
+    }
+
     try {
       const response = await fetch(url, {
         ...options,
         signal: controller.signal,
-        headers: {
-          "Content-Type": "application/json",
-          ...options.headers,
-        },
+        headers,
       });
 
       if (!response.ok) {
