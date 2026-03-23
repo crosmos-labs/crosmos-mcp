@@ -52,10 +52,15 @@ const oauthProvider = new ProxyOAuthServerProvider({
     const user = (await response.json()) as { user_id: number; email: string };
     console.log(`[verifyAccessToken] Success: user_id=${user.user_id}`);
 
+    // Decode the JWT payload to get expiration time (required by bearerAuth middleware)
+    const payloadBase64 = token.split(".")[1];
+    const payload = JSON.parse(Buffer.from(payloadBase64, "base64url").toString());
+
     return {
       token,
       clientId: "crosmos-mcp",
       scopes: [],
+      expiresAt: payload.exp,
       extra: { userId: user.user_id, email: user.email },
     };
   },
