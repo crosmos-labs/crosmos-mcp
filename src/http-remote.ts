@@ -36,15 +36,21 @@ const oauthProvider = new ProxyOAuthServerProvider({
 
   async verifyAccessToken(token: string): Promise<AuthInfo> {
     // Verify the token by calling the backend's /auth/me endpoint
-    const response = await fetch(`${config.api.baseUrl}/api/v1/auth/me`, {
+    const url = `${config.api.baseUrl}/api/v1/auth/me`;
+    console.log(`[verifyAccessToken] Calling ${url} with token: ${token.substring(0, 20)}...`);
+
+    const response = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
     if (!response.ok) {
+      const body = await response.text();
+      console.error(`[verifyAccessToken] Failed: ${response.status} ${body}`);
       throw new Error(`Token verification failed: ${response.status}`);
     }
 
     const user = (await response.json()) as { user_id: number; email: string };
+    console.log(`[verifyAccessToken] Success: user_id=${user.user_id}`);
 
     return {
       token,
