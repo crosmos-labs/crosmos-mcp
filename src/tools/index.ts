@@ -13,3 +13,4 @@ export {
 export { handleSearch, formatSearchResult } from "./search.js";
 export { handleAddMemory, formatAddMemoryResult } from "./memory.js";
 export { handleHealth, formatHealthResult } from "./health.js";
+export { handleListSpaces, formatListSpacesResult, listSpacesToolDefinition } from "./spaces.js";

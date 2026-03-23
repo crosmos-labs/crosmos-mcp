@@ -6,6 +6,7 @@ export interface ApiEndpoints {
     search: string;
     memoryAdd: string;
     health: string;
+    spaces: string;
   };
 }
 
@@ -17,6 +18,7 @@ const createEndpoints = (baseUrl: string, timeout = 30000, apiKey?: string): Api
     search: "/api/v1/search",
     memoryAdd: "/api/v1/memory/add",
     health: "/health",
+    spaces: "/api/v1/spaces",
   },
 });
 

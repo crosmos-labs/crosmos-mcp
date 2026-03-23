@@ -5,9 +5,11 @@ import {
   formatAddMemoryResult,
   formatHealthResult,
   formatSearchResult,
+  formatListSpacesResult,
   handleAddMemory,
   handleHealth,
   handleSearch,
+  handleListSpaces,
   searchInputSchema,
 } from "./tools/index.js";
 
@@ -96,6 +98,26 @@ export function createServer(): McpServer {
         const message = error instanceof Error ? error.message : "Unknown error";
         return {
           content: [{ type: "text", text: `Health check failed: ${message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  server.tool(
+    "list_spaces",
+    "List all memory spaces owned by the authenticated user. Use this to discover available space IDs for searching and adding memories.",
+    {},
+    async () => {
+      try {
+        const result = await handleListSpaces();
+        return {
+          content: [{ type: "text", text: formatListSpacesResult(result) }],
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        return {
+          content: [{ type: "text", text: `Error listing spaces: ${message}` }],
           isError: true,
         };
       }

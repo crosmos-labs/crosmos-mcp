@@ -4,6 +4,7 @@ import type {
   AddMemoryResponse,
   SearchRequest,
   SearchResponse,
+  SpaceListResponse,
 } from "../schemas/index.js";
 
 export class MemoryClient {
@@ -67,6 +68,13 @@ export class MemoryClient {
   async health(): Promise<{ status: string }> {
     const url = buildUrl(config.api, "health");
     return this.request<{ status: string }>(url, {
+      method: "GET",
+    });
+  }
+
+  async listSpaces(): Promise<SpaceListResponse> {
+    const url = buildUrl(config.api, "spaces");
+    return this.request<SpaceListResponse>(url, {
       method: "GET",
     });
   }
