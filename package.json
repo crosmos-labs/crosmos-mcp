@@ -14,7 +14,8 @@
   "types": "dist/index.d.ts",
   "bin": {
     "crosmos-mcp": "./dist/stdio.js",
-    "crosmos-mcp-http": "./dist/http.js"
+    "crosmos-mcp-http": "./dist/http.js",
+    "crosmos-mcp-remote": "./dist/http-remote.js"
   },
   "exports": {
     ".": "./dist/index.js",
@@ -22,7 +23,7 @@
   },
   "files": ["dist", "README.md"],
   "scripts": {
-    "build": "bun build ./src/stdio.ts ./src/http.ts ./src/server.ts --outdir ./dist --target node --splitting",
+    "build": "bun build ./src/stdio.ts ./src/http.ts ./src/http-remote.ts ./src/server.ts --outdir ./dist --target node --splitting",
     "dev": "bun run --watch src/stdio.ts",
     "dev:http": "bun run --watch src/http.ts",
     "start": "bun run src/stdio.ts",

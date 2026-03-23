@@ -1,0 +1,182 @@
+#!/usr/bin/env node
+/**
+ * Remote MCP server entry point with OAuth 2.1 authentication.
+ *
+ * Used when deployed as a Claude custom connector (e.g., mcp.iiviie.dev).
+ * Uses Streamable HTTP transport and proxies OAuth to the crosmos backend.
+ *
+ * The local stdio/SSE modes (stdio.ts, http.ts) remain unchanged for
+ * npm package usage with static API keys.
+ */
+
+import { randomUUID } from "node:crypto";
+import express from "express";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { mcpAuthRouter } from "@modelcontextprotocol/sdk/server/auth/router.js";
+import { ProxyOAuthServerProvider } from "@modelcontextprotocol/sdk/server/auth/providers/proxyProvider.js";
+import { requireBearerAuth } from "@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js";
+import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types.js";
+import type { OAuthClientInformationFull } from "@modelcontextprotocol/sdk/shared/auth.js";
+import { createServer } from "./server.js";
+import { config } from "./config/index.js";
+
+const PORT = Number.parseInt(process.env.PORT || "3000", 10);
+const HOST = process.env.HOST || "0.0.0.0";
+const MCP_BASE_URL = process.env.MCP_BASE_URL || `http://localhost:${PORT}`;
+
+// ── OAuth proxy provider ──────────────────────────────────────────────
+
+const oauthProvider = new ProxyOAuthServerProvider({
+  endpoints: {
+    authorizationUrl: config.oauth.authorizationUrl,
+    tokenUrl: config.oauth.tokenUrl,
+    revocationUrl: undefined,
+    registrationUrl: config.oauth.registrationUrl,
+  },
+
+  async verifyAccessToken(token: string): Promise<AuthInfo> {
+    // Verify the token by calling the backend's /auth/me endpoint
+    const response = await fetch(`${config.api.baseUrl}/api/v1/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Token verification failed: ${response.status}`);
+    }
+
+    const user = (await response.json()) as { user_id: number; email: string };
+
+    return {
+      token,
+      clientId: "crosmos-mcp",
+      scopes: [],
+      extra: { userId: user.user_id, email: user.email },
+    };
+  },
+
+  async getClient(clientId: string): Promise<OAuthClientInformationFull | undefined> {
+    // Look up client from the backend
+    // For the proxy flow, we trust the upstream registration
+    // Return a permissive client info that allows the flow to proceed
+    return {
+      client_id: clientId,
+      redirect_uris: [],
+      grant_types: ["authorization_code", "refresh_token"],
+      response_types: ["code"],
+      client_name: "crosmos-mcp-client",
+      token_endpoint_auth_method: "client_secret_post",
+    };
+  },
+});
+
+// ── Express app ───────────────────────────────────────────────────────
+
+const app = express();
+
+// CORS
+app.use((_req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, Mcp-Session-Id");
+  if (_req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
+// Mount OAuth routes (handles /.well-known/oauth-authorization-server, /authorize, /token, /register)
+app.use(
+  mcpAuthRouter({
+    provider: oauthProvider,
+    issuerUrl: new URL(MCP_BASE_URL),
+    baseUrl: new URL(MCP_BASE_URL),
+    scopesSupported: [],
+  })
+);
+
+// Bearer auth middleware for MCP endpoints
+const bearerAuth = requireBearerAuth({
+  verifier: oauthProvider,
+});
+
+// ── Streamable HTTP transport ─────────────────────────────────────────
+
+// Map of session ID to transport
+const transports = new Map<string, StreamableHTTPServerTransport>();
+
+// Handle MCP requests (POST /mcp)
+app.post("/mcp", bearerAuth, async (req, res) => {
+  const sessionId = req.headers["mcp-session-id"] as string | undefined;
+
+  let transport: StreamableHTTPServerTransport;
+
+  if (sessionId && transports.has(sessionId)) {
+    transport = transports.get(sessionId)!;
+  } else if (!sessionId) {
+    // New session — create transport and connect server
+    transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: () => randomUUID(),
+    });
+
+    const server = createServer();
+    await server.connect(transport);
+
+    if (transport.sessionId) {
+      transports.set(transport.sessionId, transport);
+    }
+
+    transport.onclose = () => {
+      if (transport.sessionId) {
+        transports.delete(transport.sessionId);
+      }
+    };
+  } else {
+    res.status(404).json({ error: "Session not found" });
+    return;
+  }
+
+  await transport.handleRequest(req, res, req.body);
+});
+
+// Handle SSE streams (GET /mcp)
+app.get("/mcp", bearerAuth, async (req, res) => {
+  const sessionId = req.headers["mcp-session-id"] as string | undefined;
+
+  if (!sessionId || !transports.has(sessionId)) {
+    res.status(400).json({ error: "Missing or invalid session ID" });
+    return;
+  }
+
+  const transport = transports.get(sessionId)!;
+  await transport.handleRequest(req, res);
+});
+
+// Handle session termination (DELETE /mcp)
+app.delete("/mcp", bearerAuth, async (req, res) => {
+  const sessionId = req.headers["mcp-session-id"] as string | undefined;
+
+  if (!sessionId || !transports.has(sessionId)) {
+    res.status(404).json({ error: "Session not found" });
+    return;
+  }
+
+  const transport = transports.get(sessionId)!;
+  await transport.close();
+  transports.delete(sessionId);
+  res.sendStatus(204);
+});
+
+// Health check (no auth required)
+app.get("/health", (_req, res) => {
+  res.json({ status: "healthy", service: "crosmos-mcp-remote", mode: "oauth" });
+});
+
+// ── Start ─────────────────────────────────────────────────────────────
+
+app.listen(PORT, HOST, () => {
+  console.log(`Crosmos MCP Remote server running at http://${HOST}:${PORT}`);
+  console.log(`MCP endpoint: http://${HOST}:${PORT}/mcp`);
+  console.log(`OAuth metadata: http://${HOST}:${PORT}/.well-known/oauth-authorization-server`);
+  console.log(`Backend: ${config.api.baseUrl}`);
+  console.log(`Mode: OAuth (remote connector)`);
+});
