@@ -133,7 +133,7 @@ const bearerAuth = requireBearerAuth({
 const transports = new Map<string, StreamableHTTPServerTransport>();
 
 // Handle MCP requests (POST /mcp)
-app.post("/mcp", bearerAuth, async (req, res) => {
+app.post("/", bearerAuth, async (req, res) => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
 
   let transport: StreamableHTTPServerTransport;
@@ -167,7 +167,7 @@ app.post("/mcp", bearerAuth, async (req, res) => {
 });
 
 // Handle SSE streams (GET /mcp)
-app.get("/mcp", bearerAuth, async (req, res) => {
+app.get("/", bearerAuth, async (req, res) => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
 
   if (!sessionId || !transports.has(sessionId)) {
@@ -180,7 +180,7 @@ app.get("/mcp", bearerAuth, async (req, res) => {
 });
 
 // Handle session termination (DELETE /mcp)
-app.delete("/mcp", bearerAuth, async (req, res) => {
+app.delete("/", bearerAuth, async (req, res) => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
 
   if (!sessionId || !transports.has(sessionId)) {
@@ -211,7 +211,7 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 
 app.listen(PORT, HOST, () => {
   console.log(`Crosmos MCP Remote server running at http://${HOST}:${PORT}`);
-  console.log(`MCP endpoint: http://${HOST}:${PORT}/mcp`);
+  console.log(`MCP endpoint: http://${HOST}:${PORT}/`);
   console.log(`OAuth metadata: http://${HOST}:${PORT}/.well-known/oauth-authorization-server`);
   console.log(`Backend: ${config.api.baseUrl}`);
   console.log(`Mode: OAuth (remote connector)`);
