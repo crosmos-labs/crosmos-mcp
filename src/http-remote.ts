@@ -89,6 +89,9 @@ const oauthProvider = new ProxyOAuthServerProvider({
 
 const app = express();
 
+// Trust the reverse proxy (nginx) so rate limiting uses real client IPs
+app.set("trust proxy", 1);
+
 // CORS
 app.use((_req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
