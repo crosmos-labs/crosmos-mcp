@@ -160,15 +160,20 @@ app.post("/", bearerAuth, async (req, res) => {
     const server = createServer();
     await server.connect(transport);
 
-    if (transport.sessionId) {
-      transports.set(transport.sessionId, transport);
-    }
-
     transport.onclose = () => {
       if (transport.sessionId) {
         transports.delete(transport.sessionId);
       }
     };
+
+    // handleRequest generates the session ID during init
+    await transport.handleRequest(req, res, req.body);
+
+    // Store session AFTER handleRequest (session ID now exists)
+    if (transport.sessionId && !transports.has(transport.sessionId)) {
+      transports.set(transport.sessionId, transport);
+    }
+    return;
   } else {
     res.status(404).json({ error: "Session not found" });
     return;
