@@ -55,17 +55,33 @@ const oauthProvider = new ProxyOAuthServerProvider({
   },
 
   async getClient(clientId: string): Promise<OAuthClientInformationFull | undefined> {
-    // Look up client from the backend
-    // For the proxy flow, we trust the upstream registration
-    // Return a permissive client info that allows the flow to proceed
-    return {
-      client_id: clientId,
-      redirect_uris: [],
-      grant_types: ["authorization_code", "refresh_token"],
-      response_types: ["code"],
-      client_name: "crosmos-mcp-client",
-      token_endpoint_auth_method: "client_secret_post",
-    };
+    // Fetch real client data from the backend (needed for redirect_uri validation)
+    try {
+      const response = await fetch(`${config.api.baseUrl}/oauth/client/${clientId}`);
+      if (!response.ok) {
+        return undefined;
+      }
+
+      const data = (await response.json()) as {
+        client_id: string;
+        redirect_uris: string[];
+        client_name: string | null;
+        grant_types: string[];
+        response_types: string[];
+        token_endpoint_auth_method: string;
+      };
+
+      return {
+        client_id: data.client_id,
+        redirect_uris: data.redirect_uris,
+        grant_types: data.grant_types,
+        response_types: data.response_types,
+        client_name: data.client_name ?? undefined,
+        token_endpoint_auth_method: data.token_endpoint_auth_method,
+      };
+    } catch {
+      return undefined;
+    }
   },
 });
 
