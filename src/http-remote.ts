@@ -92,6 +92,15 @@ const app = express();
 // Trust the reverse proxy (nginx) so rate limiting uses real client IPs
 app.set("trust proxy", 1);
 
+// Request logging
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on("finish", () => {
+    console.log(`${req.method} ${req.url} → ${res.statusCode} (${Date.now() - start}ms)`);
+  });
+  next();
+});
+
 // CORS
 app.use((_req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -188,6 +197,14 @@ app.delete("/mcp", bearerAuth, async (req, res) => {
 // Health check (no auth required)
 app.get("/health", (_req, res) => {
   res.json({ status: "healthy", service: "crosmos-mcp-remote", mode: "oauth" });
+});
+
+// Global error handler (must be after all routes)
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error("Unhandled error:", err.message);
+  if (!res.headersSent) {
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 // ── Start ─────────────────────────────────────────────────────────────
