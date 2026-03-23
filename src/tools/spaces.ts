@@ -16,8 +16,8 @@ export const listSpacesToolDefinition: Tool = {
   },
 };
 
-export async function handleListSpaces(): Promise<SpaceListResponse> {
-  const response = await memoryClient.listSpaces();
+export async function handleListSpaces(authToken?: string): Promise<SpaceListResponse> {
+  const response = await memoryClient.listSpaces(authToken);
   const parsed = SpaceListResponseSchema.safeParse(response);
 
   if (!parsed.success) {

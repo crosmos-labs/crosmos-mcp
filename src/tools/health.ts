@@ -10,8 +10,8 @@ export const healthToolDefinition: Tool = {
   },
 };
 
-export async function handleHealth(): Promise<{ status: string }> {
-  return memoryClient.health();
+export async function handleHealth(authToken?: string): Promise<{ status: string }> {
+  return memoryClient.health(authToken);
 }
 
 export function formatHealthResult(response: { status: string }): string {

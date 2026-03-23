@@ -36,7 +36,7 @@ export interface SearchToolInput {
   space_id?: number;
 }
 
-export async function handleSearch(input: unknown): Promise<SearchResponse> {
+export async function handleSearch(input: unknown, authToken?: string): Promise<SearchResponse> {
   const parsed = SearchRequestSchema.safeParse({
     query: (input as SearchToolInput).query,
     space_id: (input as SearchToolInput).space_id ?? config.defaults.spaceId,
@@ -46,7 +46,7 @@ export async function handleSearch(input: unknown): Promise<SearchResponse> {
     throw new Error(`Invalid input: ${parsed.error.message}`);
   }
 
-  return memoryClient.search(parsed.data);
+  return memoryClient.search(parsed.data, authToken);
 }
 
 export function formatSearchResult(response: SearchResponse): string {

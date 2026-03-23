@@ -18,7 +18,7 @@ export class MemoryClient {
     this.apiKey = apiKey ?? config.api.apiKey;
   }
 
-  private async request<T>(url: string, options: RequestInit): Promise<T> {
+  private async request<T>(url: string, options: RequestInit, authToken?: string): Promise<T> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
@@ -27,8 +27,10 @@ export class MemoryClient {
       ...(options.headers as Record<string, string>),
     };
 
-    if (this.apiKey) {
-      headers.Authorization = `Bearer ${this.apiKey}`;
+    // Per-request auth token takes precedence over static API key
+    const token = authToken ?? this.apiKey;
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
     }
 
     try {
@@ -49,34 +51,34 @@ export class MemoryClient {
     }
   }
 
-  async search(params: SearchRequest): Promise<SearchResponse> {
+  async search(params: SearchRequest, authToken?: string): Promise<SearchResponse> {
     const url = buildUrl(config.api, "search");
     return this.request<SearchResponse>(url, {
       method: "POST",
       body: JSON.stringify(params),
-    });
+    }, authToken);
   }
 
-  async addMemory(params: AddMemoryRequest): Promise<AddMemoryResponse> {
+  async addMemory(params: AddMemoryRequest, authToken?: string): Promise<AddMemoryResponse> {
     const url = buildUrl(config.api, "memoryAdd");
     return this.request<AddMemoryResponse>(url, {
       method: "POST",
       body: JSON.stringify(params),
-    });
+    }, authToken);
   }
 
-  async health(): Promise<{ status: string }> {
+  async health(authToken?: string): Promise<{ status: string }> {
     const url = buildUrl(config.api, "health");
     return this.request<{ status: string }>(url, {
       method: "GET",
-    });
+    }, authToken);
   }
 
-  async listSpaces(): Promise<SpaceListResponse> {
+  async listSpaces(authToken?: string): Promise<SpaceListResponse> {
     const url = buildUrl(config.api, "spaces");
     return this.request<SpaceListResponse>(url, {
       method: "GET",
-    });
+    }, authToken);
   }
 }
 

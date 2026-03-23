@@ -1,4 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { MemoryClient } from "./client/index.js";
 import { config } from "./config/index.js";
 import {
   addMemoryInputSchema,
@@ -33,12 +34,13 @@ export function createServer(): McpServer {
       query: searchInputSchema.shape.query,
       space_id: searchInputSchema.shape.space_id,
     },
-    async (input) => {
+    async (input, extra) => {
+      const authToken = extra.authInfo?.token;
       try {
         const result = await handleSearch({
           query: input.query,
           space_id: input.space_id ?? config.defaults.spaceId,
-        });
+        }, authToken);
         return {
           content: [{ type: "text", text: formatSearchResult(result) }],
         };
@@ -59,7 +61,8 @@ export function createServer(): McpServer {
       space_id: addMemoryInputSchema.shape.space_id,
       sources: addMemoryInputSchema.shape.sources,
     },
-    async (input) => {
+    async (input, extra) => {
+      const authToken = extra.authInfo?.token;
       try {
         const result = await handleAddMemory({
           space_id: input.space_id ?? config.defaults.spaceId,
@@ -70,7 +73,7 @@ export function createServer(): McpServer {
             sequence: s.sequence ?? 0,
             meta: s.meta ?? null,
           })),
-        });
+        }, authToken);
         return {
           content: [{ type: "text", text: formatAddMemoryResult(result) }],
         };
@@ -88,9 +91,10 @@ export function createServer(): McpServer {
     "health_check",
     "Check the health status of the Crosmos Memory Engine API",
     {},
-    async () => {
+    async (_input, extra) => {
+      const authToken = extra.authInfo?.token;
       try {
-        const result = await handleHealth();
+        const result = await handleHealth(authToken);
         return {
           content: [{ type: "text", text: formatHealthResult(result) }],
         };
@@ -108,9 +112,10 @@ export function createServer(): McpServer {
     "list_spaces",
     "List all memory spaces owned by the authenticated user. Use this to discover available space IDs for searching and adding memories.",
     {},
-    async () => {
+    async (_input, extra) => {
+      const authToken = extra.authInfo?.token;
       try {
-        const result = await handleListSpaces();
+        const result = await handleListSpaces(authToken);
         return {
           content: [{ type: "text", text: formatListSpacesResult(result) }],
         };

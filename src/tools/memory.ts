@@ -72,7 +72,7 @@ export interface AddMemoryToolInput {
   }>;
 }
 
-export async function handleAddMemory(input: unknown): Promise<AddMemoryResponse> {
+export async function handleAddMemory(input: unknown, authToken?: string): Promise<AddMemoryResponse> {
   const rawInput = input as AddMemoryToolInput;
 
   const parsed = AddMemoryRequestSchema.safeParse({
@@ -90,7 +90,7 @@ export async function handleAddMemory(input: unknown): Promise<AddMemoryResponse
     throw new Error(`Invalid input: ${parsed.error.message}`);
   }
 
-  return memoryClient.addMemory(parsed.data);
+  return memoryClient.addMemory(parsed.data, authToken);
 }
 
 export function formatAddMemoryResult(response: AddMemoryResponse): string {
