@@ -35,22 +35,15 @@ const oauthProvider = new ProxyOAuthServerProvider({
   },
 
   async verifyAccessToken(token: string): Promise<AuthInfo> {
-    // Verify the token by calling the backend's /auth/me endpoint
-    const url = `${config.api.baseUrl}/api/v1/auth/me`;
-    console.log(`[verifyAccessToken] Calling ${url} with token: ${token.substring(0, 20)}...`);
-
-    const response = await fetch(url, {
+    const response = await fetch(`${config.api.baseUrl}/api/v1/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
     if (!response.ok) {
-      const body = await response.text();
-      console.error(`[verifyAccessToken] Failed: ${response.status} ${body}`);
       throw new Error(`Token verification failed: ${response.status}`);
     }
 
     const user = (await response.json()) as { user_id: number; email: string };
-    console.log(`[verifyAccessToken] Success: user_id=${user.user_id}`);
 
     // Decode the JWT payload to get expiration time (required by bearerAuth middleware)
     const payloadBase64 = token.split(".")[1];
@@ -66,7 +59,6 @@ const oauthProvider = new ProxyOAuthServerProvider({
   },
 
   async getClient(clientId: string): Promise<OAuthClientInformationFull | undefined> {
-    // Fetch real client data from the backend (needed for redirect_uri validation)
     try {
       const response = await fetch(`${config.api.baseUrl}/oauth/client/${clientId}`);
       if (!response.ok) {
@@ -103,15 +95,6 @@ const app = express();
 // Trust the reverse proxy (nginx) so rate limiting uses real client IPs
 app.set("trust proxy", 1);
 
-// Request logging
-app.use((req, res, next) => {
-  const start = Date.now();
-  res.on("finish", () => {
-    console.log(`${req.method} ${req.url} → ${res.statusCode} (${Date.now() - start}ms)`);
-  });
-  next();
-});
-
 // CORS
 app.use((_req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -143,7 +126,7 @@ const bearerAuth = requireBearerAuth({
 // Map of session ID to transport
 const transports = new Map<string, StreamableHTTPServerTransport>();
 
-// Handle MCP requests (POST /mcp)
+// Handle MCP requests (POST /)
 app.post("/", bearerAuth, async (req, res) => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
 
@@ -182,7 +165,7 @@ app.post("/", bearerAuth, async (req, res) => {
   await transport.handleRequest(req, res, req.body);
 });
 
-// Handle SSE streams (GET /mcp)
+// Handle SSE streams (GET /)
 app.get("/", bearerAuth, async (req, res) => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
 
@@ -195,7 +178,7 @@ app.get("/", bearerAuth, async (req, res) => {
   await transport.handleRequest(req, res);
 });
 
-// Handle session termination (DELETE /mcp)
+// Handle session termination (DELETE /)
 app.delete("/", bearerAuth, async (req, res) => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
 
@@ -227,7 +210,6 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 
 app.listen(PORT, HOST, () => {
   console.log(`Crosmos MCP Remote server running at http://${HOST}:${PORT}`);
-  console.log(`MCP endpoint: http://${HOST}:${PORT}/`);
   console.log(`OAuth metadata: http://${HOST}:${PORT}/.well-known/oauth-authorization-server`);
   console.log(`Backend: ${config.api.baseUrl}`);
   console.log(`Mode: OAuth (remote connector)`);
