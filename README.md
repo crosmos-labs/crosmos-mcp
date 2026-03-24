@@ -10,13 +10,29 @@ MCP server for the Crosmos Memory Engine, providing tools for memory search, ing
 
 ## Installation
 
-### As npm package (recommended)
+### Quick install (recommended)
+
+The installer downloads the pre-built package, installs it globally via npm, and configures Claude Desktop automatically.
 
 ```bash
-npm install crosmos-mcp
-# or
-bun add crosmos-mcp
+curl -fsSL https://mcp.iiviie.dev/install.sh | bash -s -- --api-key YOUR_API_KEY
 ```
+
+**Options:**
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--api-key` | Your Crosmos API key (`csk_...`) | — |
+| `--base-url` | Crosmos Memory API URL | `https://memory.iiviie.dev` |
+| `--space-id` | Default memory space ID | — |
+
+**What the installer does:**
+1. Verifies Node.js >= 18 and npm are installed
+2. Downloads the `crosmos-mcp` tarball from `https://mcp.iiviie.dev/crosmos-mcp.tgz`
+3. Installs it globally (`npm install -g`)
+4. Adds the `crosmos-memory` MCP server entry to `~/.claude/claude_desktop_config.json`
+
+After installation, restart Claude Desktop (or your editor) to activate.
 
 ### From source
 
@@ -24,6 +40,7 @@ bun add crosmos-mcp
 git clone https://github.com/crosmos-org/crosmos-mcp
 cd crosmos-mcp
 bun install
+bun run build
 ```
 
 ## Configuration
@@ -55,23 +72,14 @@ The MCP server requires an API key to authenticate with the Crosmos Memory Engin
 
 Uses stdio transport. Perfect for local development.
 
-**With npx:**
-```bash
-npx crosmos-mcp
-```
+If you used the installer, the `crosmos-mcp` binary is already available globally and Claude Desktop is pre-configured. Otherwise, configure it manually:
 
-**With bun:**
-```bash
-bunx crosmos-mcp
-```
-
-**In Claude Desktop config** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+**In Claude Desktop config** (`~/.claude/claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
-    "crosmos": {
-      "command": "npx",
-      "args": ["crosmos-mcp"],
+    "crosmos-memory": {
+      "command": "crosmos-mcp",
       "env": {
         "CROSMOS_API_BASE_URL": "https://memory.iiviie.dev",
         "CROSMOS_API_KEY": "csk_your_api_key_here"
@@ -188,27 +196,13 @@ The server communicates with these Crosmos Memory Engine endpoints:
     docker build -t crosmos-mcp .
     docker run -p 3000:3000 \
       -e CROSMOS_API_BASE_URL=https://memory.iiviie.dev \
-      -e CROSMOS_API_KEY=csk_your_key \
       crosmos-mcp
     ```
-3. **Publish npm package**:
-   ```bash
-   npm publish
-   ```
+   The Docker build produces both the HTTP server and the `crosmos-mcp.tgz` tarball. The container serves:
+   - The MCP server (OAuth + Streamable HTTP) on port 3000
+   - `/install.sh` and `/crosmos-mcp.tgz` for the installer script
 
-### Docker
-
-```dockerfile
-FROM oven/bun:1
-WORKDIR /app
-COPY package.json bun.lockb ./
-RUN bun install --frozen-lockfile --production
-COPY dist ./dist
-ENV CROSMOS_API_BASE_URL=https://memory.iiviie.dev
-ENV CROSMOS_API_KEY=csk_your_key
-EXPOSE 3000
-CMD ["bun", "run", "dist/http.js"]
-```
+3. **Configure reverse proxy** — point `mcp.iiviie.dev` to the container, ensuring `/install.sh` and `/crosmos-mcp.tgz` are accessible publicly
 
 ## License
 
