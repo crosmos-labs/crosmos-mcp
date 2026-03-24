@@ -6,7 +6,7 @@ COPY . .
 # Build bundled output for Docker runtime
 RUN bun run build:docker
 # Build tsc output + tarball for the install script
-RUN npx tsc && npm pack --pack-destination /app
+RUN bunx tsc && bun pm pack --destination /app
 
 FROM oven/bun:1-slim
 WORKDIR /app
