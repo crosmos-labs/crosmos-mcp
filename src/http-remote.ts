@@ -198,6 +198,28 @@ app.get("/health", (_req, res) => {
   res.json({ status: "healthy", service: "crosmos-mcp-remote", mode: "oauth" });
 });
 
+// Install script (no auth required) — served from /app/install.sh in Docker
+app.get("/install.sh", (_req, res) => {
+  try {
+    const fs = require("node:fs");
+    const script = fs.readFileSync("/app/install.sh", "utf-8");
+    res.type("text/plain").send(script);
+  } catch {
+    res.status(404).type("text/plain").send("# Install script not available in this environment\n");
+  }
+});
+
+// npm tarball (no auth required) — for curl-pipe-bash installs without npm registry
+app.get("/crosmos-mcp.tgz", (_req, res) => {
+  try {
+    const fs = require("node:fs");
+    const tgz = fs.readFileSync("/app/crosmos-mcp.tgz");
+    res.type("application/gzip").send(tgz);
+  } catch {
+    res.status(404).send("Package tarball not available");
+  }
+});
+
 // Global error handler (must be after all routes)
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error("Unhandled error:", err.message);
