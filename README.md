@@ -12,27 +12,19 @@ MCP server for the Crosmos Memory Engine, providing tools for memory search, ing
 
 ### Quick install (recommended)
 
-The installer downloads the pre-built package, installs it globally via npm, and configures Claude Desktop automatically.
+Requires Node.js >= 18 and npm.
 
 ```bash
-curl -fsSL https://mcp.iiviie.dev/install.sh | bash -s -- --api-key YOUR_API_KEY
+npm install -g https://mcp.iiviie.dev/crosmos-mcp.tgz
 ```
 
-**Options:**
+Or use the install script (macOS / Linux):
 
-| Flag | Description | Default |
-|------|-------------|---------|
-| `--api-key` | Your Crosmos API key (`csk_...`) | — |
-| `--base-url` | Crosmos Memory API URL | `https://memory.iiviie.dev` |
-| `--space-id` | Default memory space ID | — |
+```bash
+curl -fsSL https://mcp.iiviie.dev/install.sh | bash
+```
 
-**What the installer does:**
-1. Verifies Node.js >= 18 and npm are installed
-2. Downloads the `crosmos-mcp` tarball from `https://mcp.iiviie.dev/crosmos-mcp.tgz`
-3. Installs it globally (`npm install -g`)
-4. Adds the `crosmos-memory` MCP server entry to `~/.claude/claude_desktop_config.json`
-
-After installation, restart Claude Desktop (or your editor) to activate.
+After installation, add the MCP server to your client of choice — see [Usage](#usage) below for config examples.
 
 ### From source
 
@@ -68,13 +60,31 @@ The MCP server requires an API key to authenticate with the Crosmos Memory Engin
 
 ## Usage
 
-### 1. Local MCP (Claude Desktop, opencode, etc.)
+After installing, add the MCP server to your preferred client. Replace `csk_your_api_key_here` with your actual API key in all examples below.
 
-Uses stdio transport. Perfect for local development.
+### Claude Code
 
-If you used the installer, the `crosmos-mcp` binary is already available globally and Claude Desktop is pre-configured. Otherwise, configure it manually:
+Run this from your terminal:
 
-**In Claude Desktop config** (`~/.claude/claude_desktop_config.json`):
+```bash
+claude mcp add crosmos-memory -- crosmos-mcp
+```
+
+Then set the environment variables in your Claude Code settings or `.env`:
+
+```
+CROSMOS_API_BASE_URL=https://memory.iiviie.dev
+CROSMOS_API_KEY=csk_your_api_key_here
+```
+
+### Claude Desktop
+
+Add to your config file:
+
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
 ```json
 {
   "mcpServers": {
@@ -89,13 +99,28 @@ If you used the installer, the `crosmos-mcp` binary is already available globall
 }
 ```
 
-**In opencode config** (`~/.config/opencode/opencode.json`):
+Restart Claude Desktop after saving.
+
+### Claude.ai (Remote)
+
+No local install needed — connects directly to the hosted MCP server.
+
+1. Go to **Settings → Connectors**
+2. Click **Add custom connector**
+3. Enter URL: `https://mcp.iiviie.dev/sse`
+
+Authentication is handled via OAuth through the remote server.
+
+### opencode
+
+Add to `~/.config/opencode/opencode.json`:
+
 ```json
 {
   "mcp": {
-    "crosmos": {
+    "crosmos-memory": {
       "type": "local",
-      "command": ["bun", "run", "/path/to/crosmos-mcp/src/stdio.ts"],
+      "command": ["crosmos-mcp"],
       "environment": {
         "CROSMOS_API_BASE_URL": "https://memory.iiviie.dev",
         "CROSMOS_API_KEY": "csk_your_api_key_here"
@@ -105,28 +130,15 @@ If you used the installer, the `crosmos-mcp` binary is already available globall
 }
 ```
 
-### 2. Remote MCP (Claude.ai)
+### Other MCP clients
 
-Uses HTTP/SSE transport. Host on any server.
+The `crosmos-mcp` binary uses stdio transport and works with any MCP-compatible client. Point your client to the binary and set these environment variables:
 
-**Start HTTP server:**
-```bash
-# Development
-bun run dev:http
-
-# Production
-PORT=3000 HOST=0.0.0.0 CROSMOS_API_BASE_URL=https://memory.iiviie.dev CROSMOS_API_KEY=csk_your_key bun run start:http
-```
-
-**Endpoints:**
-- SSE: `http://your-server:3000/sse`
-- Messages: `http://your-server:3000/message`
-- Health: `http://your-server:3000/health`
-
-**Add to Claude.ai:**
-1. Go to Settings → Connectors
-2. Click "Add custom connector"
-3. Enter URL: `https://mcp.iiviie.dev/sse`
+| Variable | Value |
+|----------|-------|
+| `CROSMOS_API_BASE_URL` | `https://memory.iiviie.dev` |
+| `CROSMOS_API_KEY` | Your API key (`csk_...`) |
+| `DEFAULT_SPACE_ID` | Memory space ID (optional, defaults to `1`) |
 
 ## Development
 
