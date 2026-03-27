@@ -95,10 +95,9 @@ export async function handleAddMemory(input: unknown, authToken?: string): Promi
 
 export function formatAddMemoryResult(response: AddMemoryResponse): string {
   return [
-    "Memory successfully added:",
+    "Memory accepted for processing:",
+    `  - Job ID: ${response.job_id}`,
+    `  - Status: ${response.status}`,
     `  - Source IDs: ${response.source_ids.join(", ")}`,
-    `  - Memories created: ${response.memory_count}`,
-    `  - Entities extracted: ${response.entity_count}`,
-    `  - Relationships created: ${response.edge_count}`,
   ].join("\n");
 }

@@ -14,10 +14,9 @@ export const AddMemoryRequestSchema = z.object({
 });
 
 export const AddMemoryResponseSchema = z.object({
+  job_id: z.string().uuid(),
+  status: z.string(),
   source_ids: z.array(z.number().int()),
-  memory_count: z.number().int(),
-  entity_count: z.number().int(),
-  edge_count: z.number().int(),
 });
 
 export type SourcePayload = z.infer<typeof SourcePayloadSchema>;
