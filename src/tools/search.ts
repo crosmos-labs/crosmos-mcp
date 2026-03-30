@@ -55,9 +55,10 @@ export function formatSearchResult(response: SearchResponse): string {
   }
 
   const results = response.candidates.map((candidate, index) => {
-    const signals =
-      candidate.source_signals.length > 0 ? ` [${candidate.source_signals.join(", ")}]` : "";
-    return `${index + 1}. (score: ${candidate.final_score.toFixed(3)})${signals}\n   ${candidate.content}`;
+    const eventTime = candidate.event_time
+      ? ` (event: ${candidate.event_time})`
+      : "";
+    return `${index + 1}. (score: ${candidate.final_score.toFixed(3)})${eventTime}\n   ${candidate.content}`;
   });
 
   return `Found ${response.candidates.length} memories for "${response.query}":\n\n${results.join("\n\n")}`;

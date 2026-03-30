@@ -13,7 +13,7 @@ export const MemoryCandidateSchema = z.object({
   fused_score: z.number(),
   persistence_score: z.number(),
   final_score: z.number(),
-  source_signals: z.array(z.string()),
+  event_time: z.string().nullable(),
 });
 
 export const SearchResponseSchema = z.object({
