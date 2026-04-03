@@ -86,8 +86,9 @@ export function createServer(): McpServer {
               }
             : null,
         }, authToken);
+        const spaceId = input.space_id ?? config.defaults.spaceId;
         return {
-          content: [{ type: "text", text: formatAddMemoryResult(result) }],
+          content: [{ type: "text", text: formatAddMemoryResult(result, spaceId) }],
         };
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown error";

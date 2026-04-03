@@ -162,11 +162,6 @@ export async function handleAddMemory(input: unknown, authToken?: string): Promi
   return memoryClient.addMemory(parsed.data, authToken);
 }
 
-export function formatAddMemoryResult(response: AddMemoryResponse): string {
-  return [
-    "Memory accepted for processing:",
-    `  - Job ID: ${response.job_id}`,
-    `  - Status: ${response.status}`,
-    `  - Source IDs: ${response.source_ids.join(", ")}`,
-  ].join("\n");
+export function formatAddMemoryResult(response: AddMemoryResponse, spaceId: number): string {
+  return `Saved memory (id: ${response.job_id}) in space_${spaceId}`;
 }
