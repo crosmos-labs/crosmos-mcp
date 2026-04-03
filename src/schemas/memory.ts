@@ -8,9 +8,37 @@ export const SourcePayloadSchema = z.object({
   meta: z.record(z.unknown()).optional().nullable(),
 });
 
+export const ConversationMessagePayloadSchema = z.object({
+  role: z.string().min(1, "Role cannot be empty").max(50, "Role is too long"),
+  content: z.string().min(1, "Content cannot be empty"),
+});
+
+export const MessagesPayloadSchema = z.object({
+  messages: z
+    .array(ConversationMessagePayloadSchema)
+    .min(1, "At least one message is required")
+    .max(500, "Too many messages"),
+  session_id: z.string().optional().nullable(),
+  session_date: z.string().optional().nullable(),
+  segment_size: z.number().int().min(1).max(20).default(4),
+  lookback: z.number().int().min(0).max(20).default(4),
+});
+
 export const AddMemoryRequestSchema = z.object({
   space_id: z.number().int().positive("Space ID must be a positive integer"),
-  sources: z.array(SourcePayloadSchema).min(1, "At least one source is required"),
+  sources: z.array(SourcePayloadSchema).min(1, "At least one source is required").optional().nullable(),
+  messages: MessagesPayloadSchema.optional().nullable(),
+}).superRefine((value, ctx) => {
+  const hasSources = Array.isArray(value.sources) && value.sources.length > 0;
+  const hasMessages = value.messages != null;
+
+  if (hasSources === hasMessages) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Provide exactly one of 'sources' or 'messages'",
+      path: ["sources"],
+    });
+  }
 });
 
 export const AddMemoryResponseSchema = z.object({
@@ -20,5 +48,7 @@ export const AddMemoryResponseSchema = z.object({
 });
 
 export type SourcePayload = z.infer<typeof SourcePayloadSchema>;
+export type ConversationMessagePayload = z.infer<typeof ConversationMessagePayloadSchema>;
+export type MessagesPayload = z.infer<typeof MessagesPayloadSchema>;
 export type AddMemoryRequest = z.infer<typeof AddMemoryRequestSchema>;
 export type AddMemoryResponse = z.infer<typeof AddMemoryResponseSchema>;

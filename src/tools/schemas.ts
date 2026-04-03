@@ -6,7 +6,7 @@ export const searchInputSchema = z.object({
   space_id: z.number().int().positive().optional().describe("The memory space to search within"),
 });
 
-export const addMemoryInputSchema = z.object({
+export const addMemoryInputFields = {
   space_id: z.number().int().positive().optional().describe("The memory space to add memories to"),
   sources: z
     .array(
@@ -23,7 +23,47 @@ export const addMemoryInputSchema = z.object({
       })
     )
     .min(1)
+    .optional()
     .describe("Content sources to ingest"),
+  messages: z.object({
+    messages: z
+      .array(
+        z.object({
+          role: z.string().min(1).describe("Speaker role"),
+          content: z.string().min(1).describe("Message content"),
+        })
+      )
+      .min(1)
+      .describe("Ordered conversation messages"),
+    session_id: z.string().optional().nullable().describe("Session identifier"),
+    session_date: z
+      .string()
+      .optional()
+      .nullable()
+      .describe("ISO datetime for the conversation reference time"),
+    segment_size: z.number().int().min(1).max(20).optional().default(4).describe("Messages per segment"),
+    lookback: z
+      .number()
+      .int()
+      .min(0)
+      .max(20)
+      .optional()
+      .default(4)
+      .describe("Number of prior segments included as context"),
+  }).optional().describe("Conversation messages with automatic segmentation and lookback context"),
+};
+
+export const addMemoryInputSchema = z.object(addMemoryInputFields).superRefine((value, ctx) => {
+  const hasSources = Array.isArray(value.sources) && value.sources.length > 0;
+  const hasMessages = value.messages !== undefined;
+
+  if (hasSources === hasMessages) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Provide exactly one of 'sources' or 'messages'",
+      path: ["sources"],
+    });
+  }
 });
 
 export const healthInputSchema = z.object({});
@@ -97,8 +137,57 @@ export const addMemoryToolDefinition: Tool = {
         },
         minItems: 1,
       },
+      messages: {
+        type: "object",
+        description: "Conversation messages with automatic segmentation and lookback context",
+        properties: {
+          messages: {
+            type: "array",
+            description: "Ordered conversation messages",
+            items: {
+              type: "object",
+              properties: {
+                role: {
+                  type: "string",
+                  description: "Speaker role",
+                  minLength: 1,
+                },
+                content: {
+                  type: "string",
+                  description: "Message content",
+                  minLength: 1,
+                },
+              },
+              required: ["role", "content"],
+            },
+            minItems: 1,
+          },
+          session_id: {
+            type: "string",
+            description: "Session identifier",
+          },
+          session_date: {
+            type: "string",
+            description: "ISO datetime for the conversation reference time",
+          },
+          segment_size: {
+            type: "integer",
+            description: "Messages per segment",
+            default: 4,
+            minimum: 1,
+            maximum: 20,
+          },
+          lookback: {
+            type: "integer",
+            description: "Number of prior segments included as context",
+            default: 4,
+            minimum: 0,
+            maximum: 20,
+          },
+        },
+        required: ["messages"],
+      },
     },
-    required: ["sources"],
   },
 };
 

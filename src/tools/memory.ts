@@ -2,10 +2,8 @@ import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { memoryClient } from "../client/index.js";
 import { config } from "../config/index.js";
 import {
-  type AddMemoryRequest,
   AddMemoryRequestSchema,
   type AddMemoryResponse,
-  type SourcePayload,
 } from "../schemas/memory.js";
 
 export const addMemoryToolDefinition: Tool = {
@@ -56,20 +54,79 @@ export const addMemoryToolDefinition: Tool = {
         },
         minItems: 1,
       },
+      messages: {
+        type: "object",
+        description: "Conversation messages with automatic segmentation and lookback context",
+        properties: {
+          messages: {
+            type: "array",
+            description: "Ordered conversation messages",
+            items: {
+              type: "object",
+              properties: {
+                role: {
+                  type: "string",
+                  description: "Speaker role",
+                  minLength: 1,
+                },
+                content: {
+                  type: "string",
+                  description: "Message content",
+                  minLength: 1,
+                },
+              },
+              required: ["role", "content"],
+            },
+            minItems: 1,
+          },
+          session_id: {
+            type: "string",
+            description: "Session identifier",
+          },
+          session_date: {
+            type: "string",
+            description: "ISO datetime for the conversation reference time",
+          },
+          segment_size: {
+            type: "integer",
+            description: "Messages per segment",
+            default: 4,
+            minimum: 1,
+            maximum: 20,
+          },
+          lookback: {
+            type: "integer",
+            description: "Number of prior segments included as context",
+            default: 4,
+            minimum: 0,
+            maximum: 20,
+          },
+        },
+        required: ["messages"],
+      },
     },
-    required: ["sources"],
   },
 };
 
 export interface AddMemoryToolInput {
   space_id?: number;
-  sources: Array<{
+  sources?: Array<{
     content: string;
     content_type?: string;
     role?: string | null;
     sequence?: number;
     meta?: Record<string, unknown> | null;
   }>;
+  messages?: {
+    messages: Array<{
+      role: string;
+      content: string;
+    }>;
+    session_id?: string | null;
+    session_date?: string | null;
+    segment_size?: number;
+    lookback?: number;
+  } | null;
 }
 
 export async function handleAddMemory(input: unknown, authToken?: string): Promise<AddMemoryResponse> {
@@ -77,13 +134,25 @@ export async function handleAddMemory(input: unknown, authToken?: string): Promi
 
   const parsed = AddMemoryRequestSchema.safeParse({
     space_id: rawInput.space_id ?? config.defaults.spaceId,
-    sources: rawInput.sources.map((s) => ({
+    sources: rawInput.sources?.map((s) => ({
       content: s.content,
       content_type: s.content_type ?? "text",
       role: s.role ?? null,
       sequence: s.sequence ?? 0,
       meta: s.meta ?? null,
-    })),
+    })) ?? null,
+    messages: rawInput.messages
+      ? {
+          messages: rawInput.messages.messages.map((message) => ({
+            role: message.role,
+            content: message.content,
+          })),
+          session_id: rawInput.messages.session_id ?? null,
+          session_date: rawInput.messages.session_date ?? null,
+          segment_size: rawInput.messages.segment_size ?? 4,
+          lookback: rawInput.messages.lookback ?? 4,
+        }
+      : null,
   });
 
   if (!parsed.success) {

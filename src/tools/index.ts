@@ -1,5 +1,6 @@
 export {
   searchInputSchema,
+  addMemoryInputFields,
   addMemoryInputSchema,
   healthInputSchema,
   searchToolDefinition,

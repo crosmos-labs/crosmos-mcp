@@ -1,8 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { MemoryClient } from "./client/index.js";
 import { config } from "./config/index.js";
 import {
-  addMemoryInputSchema,
+  addMemoryInputFields,
   formatAddMemoryResult,
   formatHealthResult,
   formatSearchResult,
@@ -58,21 +57,34 @@ export function createServer(): McpServer {
     "add_memory",
     "Add new memories to Crosmos Memory Engine. Content is processed through an extraction pipeline that identifies entities, relationships, and creates structured knowledge graph entries.",
     {
-      space_id: addMemoryInputSchema.shape.space_id,
-      sources: addMemoryInputSchema.shape.sources,
+      space_id: addMemoryInputFields.space_id,
+      sources: addMemoryInputFields.sources,
+      messages: addMemoryInputFields.messages,
     },
     async (input, extra) => {
       const authToken = extra.authInfo?.token;
       try {
         const result = await handleAddMemory({
           space_id: input.space_id ?? config.defaults.spaceId,
-          sources: input.sources.map((s) => ({
+          sources: input.sources?.map((s) => ({
             content: s.content,
             content_type: s.content_type ?? "text",
             role: s.role ?? null,
             sequence: s.sequence ?? 0,
             meta: s.meta ?? null,
           })),
+          messages: input.messages
+            ? {
+                messages: input.messages.messages.map((message) => ({
+                  role: message.role,
+                  content: message.content,
+                })),
+                session_id: input.messages.session_id ?? null,
+                session_date: input.messages.session_date ?? null,
+                segment_size: input.messages.segment_size ?? 4,
+                lookback: input.messages.lookback ?? 4,
+              }
+            : null,
         }, authToken);
         return {
           content: [{ type: "text", text: formatAddMemoryResult(result) }],
