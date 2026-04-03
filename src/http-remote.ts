@@ -26,6 +26,25 @@ const MCP_BASE_URL = process.env.MCP_BASE_URL || `http://localhost:${PORT}`;
 
 // ── OAuth proxy provider ──────────────────────────────────────────────
 
+// Logging fetch wrapper for OAuth proxy calls
+const oauthFetch: typeof fetch = async (input, init) => {
+  const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+  console.log(`[OAuth Proxy] ${init?.method ?? "GET"} ${url}`);
+  try {
+    const response = await fetch(input, init);
+    console.log(`[OAuth Proxy] Response: ${response.status} ${response.statusText}`);
+    if (!response.ok) {
+      const cloned = response.clone();
+      const body = await cloned.text();
+      console.error(`[OAuth Proxy] Error body: ${body}`);
+    }
+    return response;
+  } catch (err) {
+    console.error(`[OAuth Proxy] Network error:`, err);
+    throw err;
+  }
+};
+
 const oauthProvider = new ProxyOAuthServerProvider({
   endpoints: {
     authorizationUrl: config.oauth.authorizationUrl,
@@ -33,13 +52,16 @@ const oauthProvider = new ProxyOAuthServerProvider({
     revocationUrl: undefined,
     registrationUrl: config.oauth.registrationUrl,
   },
+  fetch: oauthFetch,
 
   async verifyAccessToken(token: string): Promise<AuthInfo> {
+    console.log("[OAuth] verifyAccessToken called");
     const response = await fetch(`${config.api.baseUrl}/api/v1/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
     if (!response.ok) {
+      console.error(`[OAuth] Token verification failed: ${response.status}`);
       throw new Error(`Token verification failed: ${response.status}`);
     }
 
@@ -59,9 +81,15 @@ const oauthProvider = new ProxyOAuthServerProvider({
   },
 
   async getClient(clientId: string): Promise<OAuthClientInformationFull | undefined> {
+    console.log(`[OAuth] getClient called for: ${clientId}`);
     try {
-      const response = await fetch(`${config.api.baseUrl}/oauth/client/${clientId}`);
+      const url = `${config.api.baseUrl}/oauth/client/${clientId}`;
+      console.log(`[OAuth] Fetching client from: ${url}`);
+      const response = await fetch(url);
       if (!response.ok) {
+        console.error(`[OAuth] getClient failed: ${response.status} ${response.statusText}`);
+        const body = await response.text();
+        console.error(`[OAuth] getClient response body: ${body}`);
         return undefined;
       }
 
@@ -82,7 +110,8 @@ const oauthProvider = new ProxyOAuthServerProvider({
         client_name: data.client_name ?? undefined,
         token_endpoint_auth_method: data.token_endpoint_auth_method,
       };
-    } catch {
+    } catch (err) {
+      console.error("[OAuth] getClient error:", err);
       return undefined;
     }
   },
@@ -94,6 +123,12 @@ const app = express();
 
 // Trust the reverse proxy (nginx) so rate limiting uses real client IPs
 app.set("trust proxy", 1);
+
+// Request logging — helps debug OAuth flow issues
+app.use((req, _res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  next();
+});
 
 // CORS
 app.use((_req, res, next) => {
