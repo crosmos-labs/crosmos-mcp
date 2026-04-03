@@ -10,10 +10,13 @@ export const MemoryCandidateSchema = z.object({
   content: z.string(),
   memory_type: z.string(),
   importance_score: z.number().nullable(),
+  created_at: z.string(),
+  event_time: z.string().nullable(),
+  source_chunk: z.string().nullable(),
   fused_score: z.number(),
   persistence_score: z.number(),
   final_score: z.number(),
-  event_time: z.string().nullable(),
+  source_signals: z.array(z.string()),
 });
 
 export const SearchResponseSchema = z.object({

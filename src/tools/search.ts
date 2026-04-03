@@ -55,10 +55,14 @@ export function formatSearchResult(response: SearchResponse): string {
   }
 
   const results = response.candidates.map((candidate, index) => {
-    const eventTime = candidate.event_time
-      ? ` (event: ${candidate.event_time})`
+    const eventTime = candidate.event_time ? ` (event: ${candidate.event_time})` : "";
+    const sourceSignals = candidate.source_signals.length > 0
+      ? ` [${candidate.source_signals.join(", ")}]`
       : "";
-    return `${index + 1}. (score: ${candidate.final_score.toFixed(3)})${eventTime}\n   ${candidate.content}`;
+    const sourceChunk = candidate.source_chunk
+      ? `\n   Source: ${candidate.source_chunk.slice(0, 200)}${candidate.source_chunk.length > 200 ? "..." : ""}`
+      : "";
+    return `${index + 1}. (score: ${candidate.final_score.toFixed(3)}, type: ${candidate.memory_type})${eventTime}${sourceSignals}\n   ${candidate.content}${sourceChunk}`;
   });
 
   return `Found ${response.candidates.length} memories for "${response.query}":\n\n${results.join("\n\n")}`;
