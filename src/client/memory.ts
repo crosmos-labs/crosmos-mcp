@@ -80,6 +80,23 @@ export class MemoryClient {
       method: "GET",
     }, authToken);
   }
+
+  async resolveSpaceId(spaceId: number | undefined, authToken?: string): Promise<number> {
+    if (spaceId !== undefined) {
+      return spaceId;
+    }
+
+    if (config.defaults.spaceId !== undefined) {
+      return config.defaults.spaceId;
+    }
+
+    const spaces = await this.listSpaces(authToken);
+    if (spaces.spaces.length === 0) {
+      throw new Error("No memory spaces found. Create a space first before searching or adding memories.");
+    }
+
+    return spaces.spaces[0].id;
+  }
 }
 
 export const memoryClient = new MemoryClient();

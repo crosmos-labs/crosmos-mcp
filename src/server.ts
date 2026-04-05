@@ -1,5 +1,4 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { config } from "./config/index.js";
 import {
   addMemoryInputFields,
   formatAddMemoryResult,
@@ -38,7 +37,7 @@ export function createServer(): McpServer {
       try {
         const result = await handleSearch({
           query: input.query,
-          space_id: input.space_id ?? config.defaults.spaceId,
+          space_id: input.space_id,
         }, authToken);
         return {
           content: [{ type: "text", text: formatSearchResult(result) }],
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
       const authToken = extra.authInfo?.token;
       try {
         const result = await handleAddMemory({
-          space_id: input.space_id ?? config.defaults.spaceId,
+          space_id: input.space_id,
           sources: input.sources?.map((s) => ({
             content: s.content,
             content_type: s.content_type ?? "text",
@@ -86,9 +85,8 @@ export function createServer(): McpServer {
               }
             : null,
         }, authToken);
-        const spaceId = input.space_id ?? config.defaults.spaceId;
         return {
-          content: [{ type: "text", text: formatAddMemoryResult(result, spaceId) }],
+          content: [{ type: "text", text: formatAddMemoryResult(result, result.resolved_space_id) }],
         };
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown error";

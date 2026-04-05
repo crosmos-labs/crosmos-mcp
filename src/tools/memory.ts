@@ -1,6 +1,5 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { memoryClient } from "../client/index.js";
-import { config } from "../config/index.js";
 import {
   AddMemoryRequestSchema,
   type AddMemoryResponse,
@@ -17,8 +16,7 @@ export const addMemoryToolDefinition: Tool = {
     properties: {
       space_id: {
         type: "integer",
-        description: "The memory space to add memories to",
-        default: config.defaults.spaceId,
+        description: "The memory space to add memories to. If omitted, uses DEFAULT_SPACE_ID env var or auto-detects from available spaces.",
       },
       sources: {
         type: "array",
@@ -129,11 +127,12 @@ export interface AddMemoryToolInput {
   } | null;
 }
 
-export async function handleAddMemory(input: unknown, authToken?: string): Promise<AddMemoryResponse> {
+export async function handleAddMemory(input: unknown, authToken?: string): Promise<AddMemoryResponse & { resolved_space_id: number }> {
   const rawInput = input as AddMemoryToolInput;
+  const spaceId = await memoryClient.resolveSpaceId(rawInput.space_id, authToken);
 
   const parsed = AddMemoryRequestSchema.safeParse({
-    space_id: rawInput.space_id ?? config.defaults.spaceId,
+    space_id: spaceId,
     sources: rawInput.sources?.map((s) => ({
       content: s.content,
       content_type: s.content_type ?? "text",
@@ -159,7 +158,8 @@ export async function handleAddMemory(input: unknown, authToken?: string): Promi
     throw new Error(`Invalid input: ${parsed.error.message}`);
   }
 
-  return memoryClient.addMemory(parsed.data, authToken);
+  const result = await memoryClient.addMemory(parsed.data, authToken);
+  return { ...result, resolved_space_id: spaceId };
 }
 
 export function formatAddMemoryResult(response: AddMemoryResponse, spaceId: number): string {

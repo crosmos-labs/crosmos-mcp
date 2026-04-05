@@ -1,6 +1,5 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { memoryClient } from "../client/index.js";
-import { config } from "../config/index.js";
 import {
   type SearchRequest,
   SearchRequestSchema,
@@ -23,8 +22,7 @@ export const searchToolDefinition: Tool = {
       },
       space_id: {
         type: "integer",
-        description: "The memory space to search within",
-        default: config.defaults.spaceId,
+        description: "The memory space to search within. If omitted, uses DEFAULT_SPACE_ID env var or auto-detects from available spaces.",
       },
     },
     required: ["query"],
@@ -37,9 +35,12 @@ export interface SearchToolInput {
 }
 
 export async function handleSearch(input: unknown, authToken?: string): Promise<SearchResponse> {
+  const rawInput = input as SearchToolInput;
+  const spaceId = await memoryClient.resolveSpaceId(rawInput.space_id, authToken);
+
   const parsed = SearchRequestSchema.safeParse({
-    query: (input as SearchToolInput).query,
-    space_id: (input as SearchToolInput).space_id ?? config.defaults.spaceId,
+    query: rawInput.query,
+    space_id: spaceId,
   });
 
   if (!parsed.success) {
