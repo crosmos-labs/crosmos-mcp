@@ -16,12 +16,9 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/crosmos-mcp-*.tgz ./crosmos-mcp.tgz
 COPY install.sh ./install.sh
 
-ENV CROSMOS_API_BASE_URL=http://localhost:8000
-ENV MCP_BASE_URL=https://mcp.iiviie.dev
-ENV PORT=3000
 ENV HOST=0.0.0.0
 
-EXPOSE 3000
+EXPOSE 3001
 
 # Use http-remote.js for deployed instances (OAuth + Streamable HTTP)
 # Use http.js for local/API-key mode
