@@ -15,13 +15,13 @@ MCP server for the Crosmos Memory Engine, providing tools for memory search, ing
 Requires Node.js >= 18 and npm.
 
 ```bash
-npm install -g https://mcp.iiviie.dev/crosmos-mcp.tgz
+npm install -g https://mcp.crosmos.dev/crosmos-mcp.tgz
 ```
 
 Or use the install script (macOS / Linux):
 
 ```bash
-curl -fsSL https://mcp.iiviie.dev/install.sh | bash
+curl -fsSL https://mcp.crosmos.dev/install.sh | bash
 ```
 
 After installation, add the MCP server to your client of choice — see [Usage](#usage) below for config examples.
@@ -73,7 +73,7 @@ claude mcp add crosmos-memory -- crosmos-mcp
 Then set the environment variables in your Claude Code settings or `.env`:
 
 ```
-CROSMOS_API_BASE_URL=https://memory.iiviie.dev
+CROSMOS_API_BASE_URL=https://api.crosmos.dev
 CROSMOS_API_KEY=csk_your_api_key_here
 ```
 
@@ -91,7 +91,7 @@ Add to your config file:
     "crosmos-memory": {
       "command": "crosmos-mcp",
       "env": {
-        "CROSMOS_API_BASE_URL": "https://memory.iiviie.dev",
+        "CROSMOS_API_BASE_URL": "https://api.crosmos.dev",
         "CROSMOS_API_KEY": "csk_your_api_key_here"
       }
     }
@@ -107,7 +107,7 @@ No local install needed — connects directly to the hosted MCP server.
 
 1. Go to **Settings → Connectors**
 2. Click **Add custom connector**
-3. Enter URL: `https://mcp.iiviie.dev/sse`
+3. Enter URL: `https://mcp.crosmos.dev/sse`
 
 Authentication is handled via OAuth through the remote server.
 
@@ -122,7 +122,7 @@ Add to `~/.config/opencode/opencode.json`:
       "type": "local",
       "command": ["crosmos-mcp"],
       "environment": {
-        "CROSMOS_API_BASE_URL": "https://memory.iiviie.dev",
+        "CROSMOS_API_BASE_URL": "https://api.crosmos.dev",
         "CROSMOS_API_KEY": "csk_your_api_key_here"
       }
     }
@@ -136,7 +136,7 @@ The `crosmos-mcp` binary uses stdio transport and works with any MCP-compatible 
 
 | Variable | Value |
 |----------|-------|
-| `CROSMOS_API_BASE_URL` | `https://memory.iiviie.dev` |
+| `CROSMOS_API_BASE_URL` | `https://api.crosmos.dev` |
 | `CROSMOS_API_KEY` | Your API key (`csk_...`) |
 | `DEFAULT_SPACE_ID` | Memory space ID (optional, defaults to `1`) |
 
@@ -202,19 +202,19 @@ The server communicates with these Crosmos Memory Engine endpoints:
 
 ### Production Checklist
 
-1. **Deploy Memory Engine** to `memory.iiviie.dev`
-2. **Deploy MCP HTTP Server** to `mcp.iiviie.dev`:
+1. **Deploy Memory Engine** to `api.crosmos.dev`
+2. **Deploy MCP HTTP Server** to `mcp.crosmos.dev`:
     ```bash
     docker build -t crosmos-mcp .
     docker run -p 3000:3000 \
-      -e CROSMOS_API_BASE_URL=https://memory.iiviie.dev \
+      -e CROSMOS_API_BASE_URL=https://api.crosmos.dev \
       crosmos-mcp
     ```
    The Docker build produces both the HTTP server and the `crosmos-mcp.tgz` tarball. The container serves:
    - The MCP server (OAuth + Streamable HTTP) on port 3000
    - `/install.sh` and `/crosmos-mcp.tgz` for the installer script
 
-3. **Configure reverse proxy** — point `mcp.iiviie.dev` to the container, ensuring `/install.sh` and `/crosmos-mcp.tgz` are accessible publicly
+3. **Configure reverse proxy** — point `mcp.crosmos.dev` to the container, ensuring `/install.sh` and `/crosmos-mcp.tgz` are accessible publicly
 
 ## License
 
