@@ -22,7 +22,7 @@ const createEndpoints = (baseUrl: string, timeout = 30000, apiKey?: string): Api
   apiKey,
   routes: {
     search: "/api/v1/search",
-    memoryAdd: "/api/v1/memory/add",
+    memoryAdd: "/api/v1/sources",
     health: "/health",
     spaces: "/api/v1/spaces",
   },
