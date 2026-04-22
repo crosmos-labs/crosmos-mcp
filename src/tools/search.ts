@@ -47,7 +47,12 @@ export async function handleSearch(input: unknown, authToken?: string): Promise<
     throw new Error(`Invalid input: ${parsed.error.message}`);
   }
 
-  return memoryClient.search(parsed.data, authToken);
+  const response = await memoryClient.search(parsed.data, authToken);
+  const parsedResponse = SearchResponseSchema.safeParse(response);
+  if (!parsedResponse.success) {
+    throw new Error(`Invalid response from API: ${parsedResponse.error.message}`);
+  }
+  return parsedResponse.data;
 }
 
 export function formatSearchResult(response: SearchResponse): string {
@@ -57,13 +62,10 @@ export function formatSearchResult(response: SearchResponse): string {
 
   const results = response.candidates.map((candidate, index) => {
     const eventTime = candidate.event_time ? ` (event: ${candidate.event_time})` : "";
-    const sourceSignals = candidate.source_signals.length > 0
-      ? ` [${candidate.source_signals.join(", ")}]`
-      : "";
     const sourceChunk = candidate.source_chunk
       ? `\n   Source: ${candidate.source_chunk.slice(0, 200)}${candidate.source_chunk.length > 200 ? "..." : ""}`
       : "";
-    return `${index + 1}. (score: ${candidate.final_score.toFixed(3)}, type: ${candidate.memory_type})${eventTime}${sourceSignals}\n   ${candidate.content}${sourceChunk}`;
+    return `${index + 1}. (score: ${candidate.score.toFixed(3)}, type: ${candidate.memory_type})${eventTime}\n   ${candidate.content}${sourceChunk}`;
   });
 
   return `Found ${response.candidates.length} memories for "${response.query}":\n\n${results.join("\n\n")}`;
