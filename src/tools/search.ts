@@ -21,7 +21,8 @@ export const searchToolDefinition: Tool = {
         minLength: 1,
       },
       space_id: {
-        type: "integer",
+        type: "string",
+        format: "uuid",
         description: "The memory space to search within. If omitted, uses DEFAULT_SPACE_ID env var or auto-detects from available spaces.",
       },
     },
@@ -31,7 +32,7 @@ export const searchToolDefinition: Tool = {
 
 export interface SearchToolInput {
   query: string;
-  space_id?: number;
+  space_id?: string;
 }
 
 export async function handleSearch(input: unknown, authToken?: string): Promise<SearchResponse> {
@@ -62,10 +63,7 @@ export function formatSearchResult(response: SearchResponse): string {
 
   const results = response.candidates.map((candidate, index) => {
     const eventTime = candidate.event_time ? ` (event: ${candidate.event_time})` : "";
-    const sourceChunk = candidate.source_chunk
-      ? `\n   Source: ${candidate.source_chunk.slice(0, 200)}${candidate.source_chunk.length > 200 ? "..." : ""}`
-      : "";
-    return `${index + 1}. (score: ${candidate.score.toFixed(3)}, type: ${candidate.memory_type})${eventTime}\n   ${candidate.content}${sourceChunk}`;
+    return `${index + 1}. (score: ${candidate.score.toFixed(3)}, type: ${candidate.memory_type})${eventTime}\n   ${candidate.content}`;
   });
 
   return `Found ${response.candidates.length} memories for "${response.query}":\n\n${results.join("\n\n")}`;

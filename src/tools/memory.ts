@@ -15,7 +15,8 @@ export const addMemoryToolDefinition: Tool = {
     type: "object",
     properties: {
       space_id: {
-        type: "integer",
+        type: "string",
+        format: "uuid",
         description: "The memory space to add memories to. If omitted, uses DEFAULT_SPACE_ID env var or auto-detects from available spaces.",
       },
       sources: {
@@ -107,7 +108,7 @@ export const addMemoryToolDefinition: Tool = {
 };
 
 export interface AddMemoryToolInput {
-  space_id?: number;
+  space_id?: string;
   sources?: Array<{
     content: string;
     content_type?: string;
@@ -127,7 +128,7 @@ export interface AddMemoryToolInput {
   } | null;
 }
 
-export async function handleAddMemory(input: unknown, authToken?: string): Promise<AddMemoryResponse & { resolved_space_id: number }> {
+export async function handleAddMemory(input: unknown, authToken?: string): Promise<AddMemoryResponse & { resolved_space_id: string }> {
   const rawInput = input as AddMemoryToolInput;
   const spaceId = await memoryClient.resolveSpaceId(rawInput.space_id, authToken);
 
@@ -162,6 +163,6 @@ export async function handleAddMemory(input: unknown, authToken?: string): Promi
   return { ...result, resolved_space_id: spaceId };
 }
 
-export function formatAddMemoryResult(response: AddMemoryResponse, spaceId: number): string {
-  return `Saved memory (id: ${response.job_id}) in space_${spaceId}`;
+export function formatAddMemoryResult(response: AddMemoryResponse, spaceId: string): string {
+  return `Saved memory (id: ${response.job_id}) in space ${spaceId}`;
 }

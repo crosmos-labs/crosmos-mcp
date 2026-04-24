@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const SpaceResponseSchema = z.object({
-  id: z.number().int(),
+  id: z.string().uuid(),
   name: z.string(),
   description: z.string().nullable(),
   meta: z.record(z.unknown()).nullable(),

@@ -25,7 +25,7 @@ export const MessagesPayloadSchema = z.object({
 });
 
 export const AddMemoryRequestSchema = z.object({
-  space_id: z.number().int().positive("Space ID must be a positive integer"),
+  space_id: z.string().uuid("Space ID must be a UUID"),
   sources: z.array(SourcePayloadSchema).min(1, "At least one source is required").optional().nullable(),
   messages: MessagesPayloadSchema.optional().nullable(),
 }).superRefine((value, ctx) => {
@@ -44,7 +44,7 @@ export const AddMemoryRequestSchema = z.object({
 export const AddMemoryResponseSchema = z.object({
   job_id: z.string().uuid(),
   status: z.string(),
-  source_ids: z.array(z.number().int()),
+  source_ids: z.array(z.string().uuid()),
 });
 
 export type SourcePayload = z.infer<typeof SourcePayloadSchema>;

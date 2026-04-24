@@ -3,11 +3,11 @@ import { z } from "zod";
 
 export const searchInputSchema = z.object({
   query: z.string().min(1).describe("The search query text"),
-  space_id: z.number().int().positive().optional().describe("The memory space to search within"),
+  space_id: z.string().uuid().optional().describe("The memory space to search within"),
 });
 
 export const addMemoryInputFields = {
-  space_id: z.number().int().positive().optional().describe("The memory space to add memories to"),
+  space_id: z.string().uuid().optional().describe("The memory space to add memories to"),
   sources: z
     .array(
       z.object({
@@ -82,7 +82,8 @@ export const searchToolDefinition: Tool = {
         minLength: 1,
       },
       space_id: {
-        type: "integer",
+        type: "string",
+        format: "uuid",
         description: "The memory space to search within",
       },
     },
@@ -100,7 +101,8 @@ export const addMemoryToolDefinition: Tool = {
     type: "object",
     properties: {
       space_id: {
-        type: "integer",
+        type: "string",
+        format: "uuid",
         description: "The memory space to add memories to",
       },
       sources: {

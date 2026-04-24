@@ -2,19 +2,17 @@ import { z } from "zod";
 
 export const SearchRequestSchema = z.object({
   query: z.string().min(1, "Query cannot be empty"),
-  space_id: z.number().int().positive("Space ID must be a positive integer"),
+  space_id: z.string().uuid("Space ID must be a UUID"),
 });
 
 export const MemoryCandidateSchema = z.object({
-  memory_id: z.number().int(),
+  memory_id: z.string().uuid(),
   content: z.string(),
   memory_type: z.string(),
   score: z.number(),
-  importance_score: z.number().nullable(),
   created_at: z.string(),
   recorded_at: z.string(),
   event_time: z.string().nullable(),
-  source_chunk: z.string().nullable(),
 });
 
 export const SearchResponseSchema = z.object({

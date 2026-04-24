@@ -42,9 +42,7 @@ export const config = {
     registrationUrl: `${apiBaseUrl}/oauth/register`,
   } satisfies OAuthEndpoints,
   defaults: {
-    spaceId: process.env.DEFAULT_SPACE_ID
-      ? Number.parseInt(process.env.DEFAULT_SPACE_ID, 10)
-      : undefined,
+    spaceId: process.env.DEFAULT_SPACE_ID || undefined,
   },
 };
 

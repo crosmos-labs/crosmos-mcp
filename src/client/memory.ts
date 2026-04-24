@@ -81,7 +81,7 @@ export class MemoryClient {
     }, authToken);
   }
 
-  async resolveSpaceId(spaceId: number | undefined, authToken?: string): Promise<number> {
+  async resolveSpaceId(spaceId: string | undefined, authToken?: string): Promise<string> {
     if (spaceId !== undefined) {
       return spaceId;
     }
