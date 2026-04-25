@@ -1,1 +1,1 @@
-export { config, buildUrl, type ApiEndpoints, type OAuthEndpoints } from "./endpoints.js";
+export { config, buildUrl, type ApiEndpoints } from "./endpoints.js";

@@ -51,7 +51,8 @@ export async function handleSearch(input: unknown, authToken?: string): Promise<
   const response = await memoryClient.search(parsed.data, authToken);
   const parsedResponse = SearchResponseSchema.safeParse(response);
   if (!parsedResponse.success) {
-    throw new Error(`Invalid response from API: ${parsedResponse.error.message}`);
+    const issues = parsedResponse.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
+    throw new Error(`Invalid response from API: ${issues}. Raw keys: ${Object.keys(response as object).join(", ")}, candidate keys: ${response.candidates?.length ? Object.keys(response.candidates[0] as object).join(", ") : "none"}`);
   }
   return parsedResponse.data;
 }

@@ -18,8 +18,7 @@ COPY install.sh ./install.sh
 
 ENV HOST=0.0.0.0
 
-EXPOSE 3001
+EXPOSE 3000
 
-# Use http-remote.js for deployed instances (OAuth + Streamable HTTP)
-# Use http.js for local/API-key mode
-CMD ["bun", "run", "dist/http-remote.js"]
+# Run HTTP/SSE server for local/API-key mode
+CMD ["bun", "run", "dist/http.js"]

@@ -101,16 +101,6 @@ Add to your config file:
 
 Restart Claude Desktop after saving.
 
-### Claude.ai (Remote)
-
-No local install needed — connects directly to the hosted MCP server.
-
-1. Go to **Settings → Connectors**
-2. Click **Add custom connector**
-3. Enter URL: `https://mcp.crosmos.dev/sse`
-
-Authentication is handled via OAuth through the remote server.
-
 ### opencode
 
 Add to `~/.config/opencode/opencode.json`:
@@ -200,21 +190,21 @@ The server communicates with these Crosmos Memory Engine endpoints:
 
 ## Deployment
 
-### Production Checklist
+### Self-hosted HTTP Server
 
-1. **Deploy Memory Engine** to `api.crosmos.dev`
-2. **Deploy MCP HTTP Server** to `mcp.crosmos.dev`:
-    ```bash
-    docker build -t crosmos-mcp .
-    docker run -p 3000:3000 \
-      -e CROSMOS_API_BASE_URL=https://api.crosmos.dev \
-      crosmos-mcp
-    ```
-   The Docker build produces both the HTTP server and the `crosmos-mcp.tgz` tarball. The container serves:
-   - The MCP server (OAuth + Streamable HTTP) on port 3000
-   - `/install.sh` and `/crosmos-mcp.tgz` for the installer script
+You can run the MCP HTTP server locally or on your own infrastructure:
 
-3. **Configure reverse proxy** — point `mcp.crosmos.dev` to the container, ensuring `/install.sh` and `/crosmos-mcp.tgz` are accessible publicly
+```bash
+docker build -t crosmos-mcp .
+docker run -p 3000:3000 \
+  -e CROSMOS_API_BASE_URL=https://api.crosmos.dev \
+  -e CROSMOS_API_KEY=csk_your_api_key_here \
+  crosmos-mcp
+```
+
+The Docker build produces both the HTTP server and the `crosmos-mcp.tgz` tarball. The container serves:
+- The MCP server (SSE transport) on port 3000
+- `/install.sh` and `/crosmos-mcp.tgz` for the installer script
 
 ## License
 

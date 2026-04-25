@@ -12,6 +12,12 @@ import {
   searchInputSchema,
 } from "./tools/index.js";
 
+const SERVER_INSTRUCTIONS = [
+  "Memory operations require a space_id (UUID). If you don't know the user's space IDs yet, call list_spaces to discover them first.",
+  "Cache the space IDs for the session — you don't need to call list_spaces again unless the user asks about their spaces.",
+  "If list_spaces returns no spaces, tell the user to create one via the Crosmos dashboard before proceeding.",
+].join("\n");
+
 export function createServer(): McpServer {
   const server = new McpServer(
     {
@@ -22,12 +28,13 @@ export function createServer(): McpServer {
       capabilities: {
         tools: {},
       },
-    }
+      instructions: SERVER_INSTRUCTIONS,
+    },
   );
 
   server.tool(
     "search_memories",
-    "Search memories in Crosmos Memory Engine using hybrid retrieval. Combines semantic (vector), keyword (full-text), and graph-based retrieval.",
+    "Search memories in Crosmos Memory Engine using hybrid retrieval. Combines semantic (vector), keyword (full-text), and graph-based retrieval. Requires a space_id — call list_spaces if you don't have one yet.",
     {
       query: searchInputSchema.shape.query,
       space_id: searchInputSchema.shape.space_id,
@@ -54,7 +61,7 @@ export function createServer(): McpServer {
 
   server.tool(
     "add_memory",
-    "Add new memories to Crosmos Memory Engine. Content is processed through an extraction pipeline that identifies entities, relationships, and creates structured knowledge graph entries.",
+    "Add new memories to Crosmos Memory Engine. Content is processed through an extraction pipeline that identifies entities, relationships, and creates structured knowledge graph entries. Requires a space_id — call list_spaces if you don't have one yet.",
     {
       space_id: addMemoryInputFields.space_id,
       sources: addMemoryInputFields.sources,
@@ -121,7 +128,7 @@ export function createServer(): McpServer {
 
   server.tool(
     "list_spaces",
-    "List all memory spaces owned by the authenticated user. Use this to discover available space IDs for searching and adding memories.",
+    "List all memory spaces owned by the authenticated user. Call this to discover available space IDs needed by search_memories and add_memory.",
     {},
     async (_input, extra) => {
       const authToken = extra.authInfo?.token;

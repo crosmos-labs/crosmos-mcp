@@ -9,7 +9,7 @@
     "type": "git",
     "url": "https://github.com/crosmos-org/crosmos-mcp"
   },
-  "keywords": ["mcp", "claude", "memory", "ai", "rag", "knowledge-graph"],
+  "keywords": ["mcp", "memory", "ai", "rag", "knowledge-graph"],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
@@ -26,16 +26,14 @@
       "default": "./dist/server.js"
     }
   },
-  "files": ["dist", "README.md", "!dist/http-remote*"],
+  "files": ["dist", "README.md"],
   "scripts": {
     "build": "tsc",
-    "build:docker": "bun build ./src/stdio.ts ./src/http.ts ./src/http-remote.ts ./src/server.ts --outdir ./dist --target node --splitting",
+    "build:docker": "bun build ./src/stdio.ts ./src/http.ts ./src/server.ts --outdir ./dist --target node --splitting",
     "dev": "bun run --watch src/stdio.ts",
     "dev:http": "bun run --watch src/http.ts",
-    "dev:remote": "bun run --watch src/http-remote.ts",
     "start": "bun run src/stdio.ts",
     "start:http": "bun run src/http.ts",
-    "start:remote": "bun run src/http-remote.ts",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",

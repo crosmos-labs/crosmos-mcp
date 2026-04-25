@@ -10,12 +10,6 @@ export interface ApiEndpoints {
   };
 }
 
-export interface OAuthEndpoints {
-  authorizationUrl: string;
-  tokenUrl: string;
-  registrationUrl: string;
-}
-
 const createEndpoints = (baseUrl: string, timeout = 30000, apiKey?: string): ApiEndpoints => ({
   baseUrl: baseUrl.replace(/\/$/, ""),
   timeout,
@@ -36,11 +30,6 @@ export const config = {
     Number.parseInt(process.env.CROSMOS_API_TIMEOUT || "30000", 10),
     process.env.CROSMOS_API_KEY
   ),
-  oauth: {
-    authorizationUrl: `${apiBaseUrl}/oauth/authorize`,
-    tokenUrl: `${apiBaseUrl}/oauth/token`,
-    registrationUrl: `${apiBaseUrl}/oauth/register`,
-  } satisfies OAuthEndpoints,
   defaults: {
     spaceId: process.env.DEFAULT_SPACE_ID || undefined,
   },
