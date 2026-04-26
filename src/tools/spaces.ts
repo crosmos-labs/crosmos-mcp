@@ -34,7 +34,7 @@ export function formatListSpacesResult(response: SpaceListResponse): string {
 
   const spaces = response.spaces.map((space, index) => {
     const description = space.description ? ` - ${space.description}` : "";
-    return `${index + 1}. [ID: ${space.id}] ${space.name}${description}`;
+    return `${index + 1}. ${space.name}${description}`;
   });
 
   return `Found ${response.total} memory spaces:\n\n${spaces.join("\n")}`;

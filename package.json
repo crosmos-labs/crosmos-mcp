@@ -1,5 +1,5 @@
 {
-  "name": "crosmos-mcp",
+  "name": "@crosmos/mcp-server",
   "version": "0.1.0",
   "type": "module",
   "description": "MCP server for Crosmos Memory Engine with hybrid retrieval",

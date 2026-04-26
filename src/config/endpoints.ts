@@ -1,3 +1,5 @@
+import { getApiKey, getBaseUrl } from "../cli/credentials.js";
+
 export interface ApiEndpoints {
   baseUrl: string;
   timeout: number;
@@ -7,6 +9,13 @@ export interface ApiEndpoints {
     memoryAdd: string;
     health: string;
     spaces: string;
+  };
+}
+
+export interface AppConfig {
+  api: ApiEndpoints;
+  defaults: {
+    spaceId: string | undefined;
   };
 }
 
@@ -22,18 +31,20 @@ const createEndpoints = (baseUrl: string, timeout = 30000, apiKey?: string): Api
   },
 });
 
-const apiBaseUrl = (process.env.CROSMOS_API_BASE_URL || "http://localhost:8000").replace(/\/$/, "");
+export function loadConfig(): AppConfig {
+  const baseUrl = getBaseUrl();
+  const apiKey = getApiKey();
+  const timeout = Number.parseInt(process.env.CROSMOS_API_TIMEOUT || "30000", 10);
 
-export const config = {
-  api: createEndpoints(
-    apiBaseUrl,
-    Number.parseInt(process.env.CROSMOS_API_TIMEOUT || "30000", 10),
-    process.env.CROSMOS_API_KEY
-  ),
-  defaults: {
-    spaceId: process.env.DEFAULT_SPACE_ID || undefined,
-  },
-};
+  return {
+    api: createEndpoints(baseUrl, timeout, apiKey),
+    defaults: {
+      spaceId: process.env.DEFAULT_SPACE_ID || undefined,
+    },
+  };
+}
+
+export const config: AppConfig = loadConfig();
 
 export const buildUrl = (endpoint: ApiEndpoints, route: keyof ApiEndpoints["routes"]): string => {
   return `${endpoint.baseUrl}${endpoint.routes[route]}`;

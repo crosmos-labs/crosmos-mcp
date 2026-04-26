@@ -128,7 +128,7 @@ export interface AddMemoryToolInput {
   } | null;
 }
 
-export async function handleAddMemory(input: unknown, authToken?: string): Promise<AddMemoryResponse & { resolved_space_id: string }> {
+export async function handleAddMemory(input: unknown, authToken?: string): Promise<AddMemoryResponse> {
   const rawInput = input as AddMemoryToolInput;
   const spaceId = await memoryClient.resolveSpaceId(rawInput.space_id, authToken);
 
@@ -160,9 +160,9 @@ export async function handleAddMemory(input: unknown, authToken?: string): Promi
   }
 
   const result = await memoryClient.addMemory(parsed.data, authToken);
-  return { ...result, resolved_space_id: spaceId };
+  return result;
 }
 
-export function formatAddMemoryResult(response: AddMemoryResponse, spaceId: string): string {
-  return `Saved memory (id: ${response.job_id}) in space ${spaceId}`;
+export function formatAddMemoryResult(): string {
+  return "Memory saved successfully.";
 }
