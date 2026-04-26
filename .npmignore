@@ -1,0 +1,5 @@
+*.map
+src/
+tsconfig.json
+biome.json
+node_modules/
