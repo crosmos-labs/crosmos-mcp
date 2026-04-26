@@ -32,10 +32,8 @@ export async function multiselect(options: {
   options: Array<{ value: string; label: string; hint?: string }>;
   initialValues?: string[];
   required?: boolean;
-}): Promise<Array<{ value: string; label: string; hint?: string }> | symbol> {
-  return clack.multiselect(options) as Promise<
-    Array<{ value: string; label: string; hint?: string }> | symbol
-  >;
+}): Promise<string[] | symbol> {
+  return clack.multiselect(options) as Promise<string[] | symbol>;
 }
 
 export function spinner(): { start: (msg?: string) => void; stop: (msg?: string) => void } {

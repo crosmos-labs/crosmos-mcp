@@ -349,7 +349,7 @@ export async function promptSkillInstall(): Promise<void> {
   const detected = detectInstalledClients();
 
   const selectedClients = await p.multiselect({
-    message: "Install Crosmos skill for:",
+    message: "Install Crosmos skill for (Ctrl+C to skip):",
     options: CLIENT_ORDER.map((id) => {
       const config = CLIENT_CONFIGS[id];
       const isDetected = detected.includes(id);
@@ -372,14 +372,23 @@ export async function promptSkillInstall(): Promise<void> {
     return;
   }
 
-  for (const item of selectedClients) {
-    const clientId = item.value as ClientId;
+  const installed: string[] = [];
+  const existing: string[] = [];
+
+  for (const clientId of selectedClients as ClientId[]) {
     const config = CLIENT_CONFIGS[clientId];
     const result = installSkill(clientId);
     if (result === "already_exists") {
-      p.log.success(`${config.name} — already installed`);
+      existing.push(config.name);
     } else {
-      p.log.success(`${config.name} — installed`);
+      installed.push(config.name);
     }
+  }
+
+  if (installed.length > 0) {
+    p.log.success(`Installed: ${installed.join(", ")}`);
+  }
+  if (existing.length > 0) {
+    p.log.success(`Already installed: ${existing.join(", ")}`);
   }
 }

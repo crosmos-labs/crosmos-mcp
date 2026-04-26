@@ -86,7 +86,26 @@ export async function handleSetupCommand(args: string[]): Promise<void> {
 
   await promptSkillInstall();
 
-  p.outro("Done! Crosmos MCP is ready.");
+  const outros = [
+    "Have a great day :)",
+    "Have a razzmatazz day :)",
+    "Have a banger day :)",
+    "Have a cattywampus day :)",
+    "Have a whizzbang day :)",
+    "Have a hullabaloo day :)",
+    "Have a dope day :)",
+    "Have a brouhaha day :)",
+    "Have a zhuzhed day :)",
+    "Have a kickflipping day :)",
+    "Have a snazzy day :)",
+    "Have a kerfuffled day :)",
+    "Have a gas day :)",
+    "Have a lit day :)",
+    "Have a fire day :)",
+    "Have an unskippable day :)",
+    "Have a w day :)",
+  ];
+  p.outro(outros[Math.floor(Math.random() * outros.length)]);
 }
 
 function parseBaseUrlFlag(args: string[]): string | undefined {
