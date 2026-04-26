@@ -1,20 +1,26 @@
 {
-  "name": "@crosmos/mcp-server",
-  "version": "0.1.0",
+  "name": "@crosmos/crosmos-mcp",
+  "version": "0.1.1",
   "type": "module",
   "description": "MCP server for Crosmos Memory Engine with hybrid retrieval",
   "author": "Crosmos",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/crosmos-org/crosmos-mcp"
+    "url": "git+https://github.com/crosmos-org/crosmos-mcp.git"
   },
-  "keywords": ["mcp", "memory", "ai", "rag", "knowledge-graph"],
+  "keywords": [
+    "mcp",
+    "memory",
+    "ai",
+    "rag",
+    "knowledge-graph"
+  ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "crosmos-mcp": "./dist/stdio.js",
-    "crosmos-mcp-http": "./dist/http.js"
+    "crosmos-mcp": "dist/stdio.js",
+    "crosmos-mcp-http": "dist/http.js"
   },
   "exports": {
     ".": {
@@ -26,7 +32,10 @@
       "default": "./dist/server.js"
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc",
     "build:docker": "bun build ./src/stdio.ts ./src/http.ts ./src/server.ts --outdir ./dist --target node --splitting",

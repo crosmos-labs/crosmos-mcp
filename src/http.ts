@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import express, { type Request, type Response, type NextFunction } from "express";
 import { createServer } from "./server.js";

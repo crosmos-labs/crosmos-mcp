@@ -16,7 +16,7 @@ MCP server for the Crosmos Memory Engine — persistent memory with semantic, ke
 ## Quick Start
 
 ```bash
-npx @crosmos/mcp-server setup
+npx @crosmos/crosmos-mcp setup
 ```
 
 This runs the interactive setup:
@@ -29,7 +29,7 @@ This runs the interactive setup:
 ### 1. Install
 
 ```bash
-npm install -g @crosmos/mcp-server
+npm install -g @crosmos/crosmos-mcp
 ```
 
 ### 2. Authenticate
@@ -85,12 +85,27 @@ Config location:
 
 `~/.config/opencode/opencode.json`:
 
+If you've installed globally (`npm install -g @crosmos/crosmos-mcp`):
+
 ```json
 {
   "mcp": {
     "crosmos-memory": {
       "type": "local",
-      "command": ["node", "/path/to/crosmos-mcp/dist/stdio.js"]
+      "command": ["crosmos-mcp"]
+    }
+  }
+}
+```
+
+Otherwise, run via `npx` (no global install needed):
+
+```json
+{
+  "mcp": {
+    "crosmos-memory": {
+      "type": "local",
+      "command": ["npx", "@crosmos/crosmos-mcp"]
     }
   }
 }
@@ -146,7 +161,7 @@ Credential resolution order: `CROSMOS_API_KEY` env var → `~/.crosmos/credentia
 After `npm install`, `dist/postinstall.js` runs automatically. It:
 
 1. In a TTY: launches the interactive setup (auth + skill install)
-2. In non-TTY (CI, Docker): prints a hint to run `npx @crosmos/mcp-server setup`
+2. In non-TTY (CI, Docker): prints a hint to run `npx @crosmos/crosmos-mcp setup`
 
 Credentials are stored at `~/.crosmos/credentials.json` (mode `0600`).
 
