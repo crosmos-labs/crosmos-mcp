@@ -1,86 +1,66 @@
-# Crosmos Memory MCP Server
+# Crosmos MCP Server
 
-MCP server for the Crosmos Memory Engine, providing tools for memory search, ingestion, and health monitoring.
+> **Beta** — Crosmos is in early access. APIs and features may change. Feedback welcome at [github.com/crosmos-org/crosmos-mcp](https://github.com/crosmos-org/crosmos-mcp).
 
-## Features
+MCP server for the Crosmos Memory Engine — persistent memory with semantic, keyword, and graph retrieval for AI agents.
 
-- **search_memories**: Search memories using hybrid retrieval (semantic, keyword, and graph-based)
-- **add_memory**: Add new memories with automatic entity and relationship extraction
-- **health_check**: Monitor the health status of the Crosmos Memory Engine
+## Tools
 
-## Installation
+| Tool | Description |
+|------|-------------|
+| `crosmos_search_memories` | Hybrid retrieval (semantic + keyword + graph) |
+| `crosmos_add_memory` | Store content with auto entity/relation extraction |
+| `crosmos_list_spaces` | List available memory spaces |
+| `crosmos_health_check` | Verify API connectivity and status |
 
-### Quick install (recommended)
-
-Requires Node.js >= 18 and npm.
-
-```bash
-npm install -g https://mcp.crosmos.dev/crosmos-mcp.tgz
-```
-
-Or use the install script (macOS / Linux):
+## Quick Start
 
 ```bash
-curl -fsSL https://mcp.crosmos.dev/install.sh | bash
+npx @crosmos/mcp-server setup
 ```
 
-After installation, add the MCP server to your client of choice — see [Usage](#usage) below for config examples.
+This runs the interactive setup:
 
-### From source
+1. **Authenticate** — Enter your API key (get one at [console.crosmos.dev](https://console.crosmos.dev/))
+2. **Install skill** — Auto-detects your AI editor(s) and installs the Crosmos skill
+
+## Manual Setup
+
+### 1. Install
 
 ```bash
-git clone https://github.com/crosmos-org/crosmos-mcp
-cd crosmos-mcp
-bun install
-bun run build
+npm install -g @crosmos/mcp-server
 ```
 
-## Configuration
+### 2. Authenticate
 
-### Environment Variables
+```bash
+crosmos-mcp auth login
+```
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `CROSMOS_API_BASE_URL` | Base URL for the Crosmos Memory API | `http://localhost:8000` |
-| `CROSMOS_API_KEY` | API key for authentication (required) | - |
-| `CROSMOS_API_TIMEOUT` | Request timeout in milliseconds | `30000` |
-| `DEFAULT_SPACE_ID` | Default memory space ID | `1` |
-| `PORT` | HTTP server port (HTTP mode only) | `3000` |
-| `HOST` | HTTP server host (HTTP mode only) | `0.0.0.0` |
+Or set the environment variable:
 
-### Authentication
+```bash
+export CROSMOS_API_KEY=csk_your_api_key_here
+```
 
-The MCP server requires an API key to authenticate with the Crosmos Memory Engine. Each user's API key provides access to their own memory space.
+### 3. Configure your client
 
-**To get your API key:**
-1. Log in to your Crosmos dashboard
-2. Navigate to Settings → API Keys
-3. Create a new API key (format: `csk_...`)
-4. Copy the key and set it as `CROSMOS_API_KEY`
-
-## Usage
-
-After installing, add the MCP server to your preferred client. Replace `csk_your_api_key_here` with your actual API key in all examples below.
-
-### Claude Code
-
-Run this from your terminal:
+<details>
+<summary>Claude Code</summary>
 
 ```bash
 claude mcp add crosmos-memory -- crosmos-mcp
 ```
 
-Then set the environment variables in your Claude Code settings or `.env`:
+The API key from `auth login` is picked up automatically. No env vars needed.
 
-```
-CROSMOS_API_BASE_URL=https://api.crosmos.dev
-CROSMOS_API_KEY=csk_your_api_key_here
-```
+</details>
 
-### Claude Desktop
+<details>
+<summary>Claude Desktop</summary>
 
-Add to your config file:
-
+Config location:
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Linux**: `~/.config/Claude/claude_desktop_config.json`
 - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
@@ -91,7 +71,6 @@ Add to your config file:
     "crosmos-memory": {
       "command": "crosmos-mcp",
       "env": {
-        "CROSMOS_API_BASE_URL": "https://api.crosmos.dev",
         "CROSMOS_API_KEY": "csk_your_api_key_here"
       }
     }
@@ -99,112 +78,89 @@ Add to your config file:
 }
 ```
 
-Restart Claude Desktop after saving.
+</details>
 
-### opencode
+<details>
+<summary>opencode</summary>
 
-Add to `~/.config/opencode/opencode.json`:
+`~/.config/opencode/opencode.json`:
 
 ```json
 {
   "mcp": {
     "crosmos-memory": {
       "type": "local",
-      "command": ["crosmos-mcp"],
-      "environment": {
-        "CROSMOS_API_BASE_URL": "https://api.crosmos.dev",
-        "CROSMOS_API_KEY": "csk_your_api_key_here"
-      }
+      "command": ["node", "/path/to/crosmos-mcp/dist/stdio.js"]
     }
   }
 }
 ```
 
-### Other MCP clients
+The API key from `auth login` is picked up automatically.
 
-The `crosmos-mcp` binary uses stdio transport and works with any MCP-compatible client. Point your client to the binary and set these environment variables:
+</details>
+
+<details>
+<summary>Other MCP clients</summary>
+
+The server uses stdio transport. Point your client to `crosmos-mcp` and set:
 
 | Variable | Value |
 |----------|-------|
-| `CROSMOS_API_BASE_URL` | `https://api.crosmos.dev` |
 | `CROSMOS_API_KEY` | Your API key (`csk_...`) |
-| `DEFAULT_SPACE_ID` | Memory space ID (optional, defaults to `1`) |
+| `CROSMOS_API_BASE_URL` | `https://api.crosmos.dev` (default) |
+
+</details>
+
+### 4. (Optional) Install the skill
+
+```bash
+crosmos-mcp skill install opencode    # or: cursor, claude-code, windsurf, vscode
+```
+
+## CLI Reference
+
+```bash
+crosmos-mcp                          # Start MCP server (stdio)
+crosmos-mcp setup                    # Interactive setup (auth + skill)
+crosmos-mcp auth login               # Authenticate with API key
+crosmos-mcp auth login --base-url URL # Custom API base URL
+crosmos-mcp auth logout              # Remove stored credentials
+crosmos-mcp auth status              # Show auth state
+crosmos-mcp skill install <client>   # Install Crosmos skill
+```
+
+## Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `CROSMOS_API_KEY` | API key (overrides credentials file) | — |
+| `CROSMOS_API_BASE_URL` | API base URL | `https://api.crosmos.dev` |
+| `CROSMOS_API_TIMEOUT` | Request timeout (ms) | `30000` |
+| `DEFAULT_SPACE_ID` | Default memory space | `1` |
+
+Credential resolution order: `CROSMOS_API_KEY` env var → `~/.crosmos/credentials.json` → error.
+
+## Postinstall Script
+
+After `npm install`, `dist/postinstall.js` runs automatically. It:
+
+1. In a TTY: launches the interactive setup (auth + skill install)
+2. In non-TTY (CI, Docker): prints a hint to run `npx @crosmos/mcp-server setup`
+
+Credentials are stored at `~/.crosmos/credentials.json` (mode `0600`).
+
+The source is at [`src/postinstall.ts`](src/postinstall.ts) — feel free to audit it.
 
 ## Development
 
 ```bash
-# Run stdio mode with auto-reload
-bun run dev
-
-# Run HTTP mode with auto-reload
-bun run dev:http
-
-# Build for production
-bun run build
-
-# Lint & format
-bun run lint:fix
-bun run format
-
-# Type check
-bun run typecheck
+npm run dev          # stdio mode with watch
+npm run dev:http     # HTTP mode with watch
+npm run build        # compile TypeScript
+npm run lint         # biome check
+npm run format       # biome format
 ```
-
-## Project Structure
-
-```
-crosmos-mcp/
-├── src/
-│   ├── index.ts          # Exports for programmatic use
-│   ├── server.ts         # MCP server setup (shared)
-│   ├── stdio.ts          # Stdio transport entry
-│   ├── http.ts           # HTTP transport entry
-│   ├── config/
-│   │   └── endpoints.ts  # API endpoint configuration
-│   ├── client/
-│   │   └── memory.ts     # HTTP client for Memory API
-│   ├── tools/
-│   │   ├── schemas.ts    # Zod schemas for tool inputs
-│   │   ├── search.ts     # Search memories tool
-│   │   ├── memory.ts     # Add memory tool
-│   │   ├── health.ts     # Health check tool
-│   │   └── index.ts
-│   └── schemas/
-│       ├── search.ts     # API response schemas
-│       └── memory.ts     # API request/response schemas
-├── package.json
-├── tsconfig.json
-├── biome.json
-└── .env.example
-```
-
-## API Endpoints
-
-The server communicates with these Crosmos Memory Engine endpoints:
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/v1/search` | POST | Search memories |
-| `/api/v1/memory/add` | POST | Add new memories |
-| `/health` | GET | Health check |
-
-## Deployment
-
-### Self-hosted HTTP Server
-
-You can run the MCP HTTP server locally or on your own infrastructure:
-
-```bash
-docker build -t crosmos-mcp .
-docker run -p 3000:3000 \
-  -e CROSMOS_API_BASE_URL=https://api.crosmos.dev \
-  -e CROSMOS_API_KEY=csk_your_api_key_here \
-  crosmos-mcp
-```
-
-The Docker build produces both the HTTP server and the `crosmos-mcp.tgz` tarball. The container serves:
-- The MCP server (SSE transport) on port 3000
-- `/install.sh` and `/crosmos-mcp.tgz` for the installer script
 
 ## License
 
