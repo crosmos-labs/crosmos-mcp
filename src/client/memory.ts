@@ -53,32 +53,48 @@ export class MemoryClient {
 
   async search(params: SearchRequest, authToken?: string): Promise<SearchResponse> {
     const url = buildUrl(config.api, "search");
-    return this.request<SearchResponse>(url, {
-      method: "POST",
-      body: JSON.stringify(params),
-    }, authToken);
+    return this.request<SearchResponse>(
+      url,
+      {
+        method: "POST",
+        body: JSON.stringify(params),
+      },
+      authToken
+    );
   }
 
   async addMemory(params: AddMemoryRequest, authToken?: string): Promise<AddMemoryResponse> {
     const url = buildUrl(config.api, "memoryAdd");
-    return this.request<AddMemoryResponse>(url, {
-      method: "POST",
-      body: JSON.stringify(params),
-    }, authToken);
+    return this.request<AddMemoryResponse>(
+      url,
+      {
+        method: "POST",
+        body: JSON.stringify(params),
+      },
+      authToken
+    );
   }
 
   async health(authToken?: string): Promise<{ status: string }> {
     const url = buildUrl(config.api, "health");
-    return this.request<{ status: string }>(url, {
-      method: "GET",
-    }, authToken);
+    return this.request<{ status: string }>(
+      url,
+      {
+        method: "GET",
+      },
+      authToken
+    );
   }
 
   async listSpaces(authToken?: string): Promise<SpaceListResponse> {
     const url = buildUrl(config.api, "spaces");
-    return this.request<SpaceListResponse>(url, {
-      method: "GET",
-    }, authToken);
+    return this.request<SpaceListResponse>(
+      url,
+      {
+        method: "GET",
+      },
+      authToken
+    );
   }
 
   async resolveSpaceId(spaceId: string | undefined, authToken?: string): Promise<string> {
@@ -92,7 +108,9 @@ export class MemoryClient {
 
     const spaces = await this.listSpaces(authToken);
     if (spaces.spaces.length === 0) {
-      throw new Error("No memory spaces found. Create a space first before searching or adding memories.");
+      throw new Error(
+        "No memory spaces found. Create a space first before searching or adding memories."
+      );
     }
 
     return spaces.spaces[0].id;

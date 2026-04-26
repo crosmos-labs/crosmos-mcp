@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
 import { homedir } from "node:os";
+import { dirname, join } from "node:path";
 
 const CROSMOS_DIR = ".crosmos";
 const CREDENTIALS_FILE = "credentials.json";
@@ -44,11 +44,7 @@ export function readCredentials(): Credentials | null {
 export function writeCredentials(credentials: Credentials): void {
   const filePath = getCredentialsPath();
   ensureDir(filePath);
-  const dir = dirname(filePath);
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true, mode: 0o700 });
-  }
-  writeFileSync(filePath, JSON.stringify(credentials, null, 2) + "\n", { mode: 0o600 });
+  writeFileSync(filePath, `${JSON.stringify(credentials, null, 2)}\n`, { mode: 0o600 });
 }
 
 export function deleteCredentials(): boolean {

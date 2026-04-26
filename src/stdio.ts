@@ -1,23 +1,24 @@
 #!/usr/bin/env node
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { handleAuthCommand, parseArgs, printHelp, printVersion } from "./cli/index.js";
 import { createServer } from "./server.js";
-import { parseArgs, handleAuthCommand, printHelp, printVersion } from "./cli/index.js";
 
 async function main(): Promise<void> {
-  const { command, subcommand } = parseArgs(process.argv);
+  const { command, subcommand, args } = parseArgs(process.argv);
 
-  switch (command) {
-    case "help":
-      printHelp();
-      process.exit(0);
-    case "version":
-      printVersion();
-      process.exit(0);
-    case "auth":
-      await handleAuthCommand(subcommand!);
-      process.exit(0);
-    case "server":
-      break;
+  if (command === "help") {
+    printHelp();
+    process.exit(0);
+  }
+
+  if (command === "version") {
+    printVersion();
+    process.exit(0);
+  }
+
+  if (command === "auth") {
+    await handleAuthCommand(subcommand ?? "login", args);
+    process.exit(0);
   }
 
   const server = createServer();

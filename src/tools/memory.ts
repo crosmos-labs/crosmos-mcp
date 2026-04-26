@@ -1,9 +1,6 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { memoryClient } from "../client/index.js";
-import {
-  AddMemoryRequestSchema,
-  type AddMemoryResponse,
-} from "../schemas/memory.js";
+import { AddMemoryRequestSchema, type AddMemoryResponse } from "../schemas/memory.js";
 
 export const addMemoryToolDefinition: Tool = {
   name: "add_memory",
@@ -17,7 +14,8 @@ export const addMemoryToolDefinition: Tool = {
       space_id: {
         type: "string",
         format: "uuid",
-        description: "The memory space to add memories to. If omitted, uses DEFAULT_SPACE_ID env var or auto-detects from available spaces.",
+        description:
+          "The memory space to add memories to. If omitted, uses DEFAULT_SPACE_ID env var or auto-detects from available spaces.",
       },
       sources: {
         type: "array",
@@ -128,19 +126,23 @@ export interface AddMemoryToolInput {
   } | null;
 }
 
-export async function handleAddMemory(input: unknown, authToken?: string): Promise<AddMemoryResponse> {
+export async function handleAddMemory(
+  input: unknown,
+  authToken?: string
+): Promise<AddMemoryResponse> {
   const rawInput = input as AddMemoryToolInput;
   const spaceId = await memoryClient.resolveSpaceId(rawInput.space_id, authToken);
 
   const parsed = AddMemoryRequestSchema.safeParse({
     space_id: spaceId,
-    sources: rawInput.sources?.map((s) => ({
-      content: s.content,
-      content_type: s.content_type ?? "text",
-      role: s.role ?? null,
-      sequence: s.sequence ?? 0,
-      meta: s.meta ?? null,
-    })) ?? null,
+    sources:
+      rawInput.sources?.map((s) => ({
+        content: s.content,
+        content_type: s.content_type ?? "text",
+        role: s.role ?? null,
+        sequence: s.sequence ?? 0,
+        meta: s.meta ?? null,
+      })) ?? null,
     messages: rawInput.messages
       ? {
           messages: rawInput.messages.messages.map((message) => ({

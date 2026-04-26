@@ -1,9 +1,6 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { memoryClient } from "../client/index.js";
-import {
-  type SpaceListResponse,
-  SpaceListResponseSchema,
-} from "../schemas/spaces.js";
+import { type SpaceListResponse, SpaceListResponseSchema } from "../schemas/spaces.js";
 
 export const listSpacesToolDefinition: Tool = {
   name: "list_spaces",

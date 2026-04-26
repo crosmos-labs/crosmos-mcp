@@ -25,32 +25,42 @@ export const addMemoryInputFields = {
     .min(1)
     .optional()
     .describe("Content sources to ingest"),
-  messages: z.object({
-    messages: z
-      .array(
-        z.object({
-          role: z.string().min(1).describe("Speaker role"),
-          content: z.string().min(1).describe("Message content"),
-        })
-      )
-      .min(1)
-      .describe("Ordered conversation messages"),
-    session_id: z.string().optional().nullable().describe("Session identifier"),
-    session_date: z
-      .string()
-      .optional()
-      .nullable()
-      .describe("ISO datetime for the conversation reference time"),
-    segment_size: z.number().int().min(1).max(20).optional().default(4).describe("Messages per segment"),
-    lookback: z
-      .number()
-      .int()
-      .min(0)
-      .max(20)
-      .optional()
-      .default(4)
-      .describe("Number of prior segments included as context"),
-  }).optional().describe("Conversation messages with automatic segmentation and lookback context"),
+  messages: z
+    .object({
+      messages: z
+        .array(
+          z.object({
+            role: z.string().min(1).describe("Speaker role"),
+            content: z.string().min(1).describe("Message content"),
+          })
+        )
+        .min(1)
+        .describe("Ordered conversation messages"),
+      session_id: z.string().optional().nullable().describe("Session identifier"),
+      session_date: z
+        .string()
+        .optional()
+        .nullable()
+        .describe("ISO datetime for the conversation reference time"),
+      segment_size: z
+        .number()
+        .int()
+        .min(1)
+        .max(20)
+        .optional()
+        .default(4)
+        .describe("Messages per segment"),
+      lookback: z
+        .number()
+        .int()
+        .min(0)
+        .max(20)
+        .optional()
+        .default(4)
+        .describe("Number of prior segments included as context"),
+    })
+    .optional()
+    .describe("Conversation messages with automatic segmentation and lookback context"),
 };
 
 export const addMemoryInputSchema = z.object(addMemoryInputFields).superRefine((value, ctx) => {

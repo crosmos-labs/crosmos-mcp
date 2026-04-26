@@ -3,12 +3,12 @@ import {
   addMemoryInputFields,
   formatAddMemoryResult,
   formatHealthResult,
-  formatSearchResult,
   formatListSpacesResult,
+  formatSearchResult,
   handleAddMemory,
   handleHealth,
-  handleSearch,
   handleListSpaces,
+  handleSearch,
   searchInputSchema,
 } from "./tools/index.js";
 
@@ -29,7 +29,7 @@ export function createServer(): McpServer {
         tools: {},
       },
       instructions: SERVER_INSTRUCTIONS,
-    },
+    }
   );
 
   server.tool(
@@ -42,10 +42,13 @@ export function createServer(): McpServer {
     async (input, extra) => {
       const authToken = extra.authInfo?.token;
       try {
-        const result = await handleSearch({
-          query: input.query,
-          space_id: input.space_id,
-        }, authToken);
+        const result = await handleSearch(
+          {
+            query: input.query,
+            space_id: input.space_id,
+          },
+          authToken
+        );
         return {
           content: [{ type: "text", text: formatSearchResult(result) }],
         };
@@ -70,28 +73,31 @@ export function createServer(): McpServer {
     async (input, extra) => {
       const authToken = extra.authInfo?.token;
       try {
-        const result = await handleAddMemory({
-          space_id: input.space_id,
-          sources: input.sources?.map((s) => ({
-            content: s.content,
-            content_type: s.content_type ?? "text",
-            role: s.role ?? null,
-            sequence: s.sequence ?? 0,
-            meta: s.meta ?? null,
-          })),
-          messages: input.messages
-            ? {
-                messages: input.messages.messages.map((message) => ({
-                  role: message.role,
-                  content: message.content,
-                })),
-                session_id: input.messages.session_id ?? null,
-                session_date: input.messages.session_date ?? null,
-                segment_size: input.messages.segment_size ?? 4,
-                lookback: input.messages.lookback ?? 4,
-              }
-            : null,
-        }, authToken);
+        await handleAddMemory(
+          {
+            space_id: input.space_id,
+            sources: input.sources?.map((s) => ({
+              content: s.content,
+              content_type: s.content_type ?? "text",
+              role: s.role ?? null,
+              sequence: s.sequence ?? 0,
+              meta: s.meta ?? null,
+            })),
+            messages: input.messages
+              ? {
+                  messages: input.messages.messages.map((message) => ({
+                    role: message.role,
+                    content: message.content,
+                  })),
+                  session_id: input.messages.session_id ?? null,
+                  session_date: input.messages.session_date ?? null,
+                  segment_size: input.messages.segment_size ?? 4,
+                  lookback: input.messages.lookback ?? 4,
+                }
+              : null,
+          },
+          authToken
+        );
         return {
           content: [{ type: "text", text: formatAddMemoryResult() }],
         };

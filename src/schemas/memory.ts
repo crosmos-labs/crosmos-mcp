@@ -24,22 +24,28 @@ export const MessagesPayloadSchema = z.object({
   lookback: z.number().int().min(0).max(20).default(4),
 });
 
-export const AddMemoryRequestSchema = z.object({
-  space_id: z.string().uuid("Space ID must be a UUID"),
-  sources: z.array(SourcePayloadSchema).min(1, "At least one source is required").optional().nullable(),
-  messages: MessagesPayloadSchema.optional().nullable(),
-}).superRefine((value, ctx) => {
-  const hasSources = Array.isArray(value.sources) && value.sources.length > 0;
-  const hasMessages = value.messages != null;
+export const AddMemoryRequestSchema = z
+  .object({
+    space_id: z.string().uuid("Space ID must be a UUID"),
+    sources: z
+      .array(SourcePayloadSchema)
+      .min(1, "At least one source is required")
+      .optional()
+      .nullable(),
+    messages: MessagesPayloadSchema.optional().nullable(),
+  })
+  .superRefine((value, ctx) => {
+    const hasSources = Array.isArray(value.sources) && value.sources.length > 0;
+    const hasMessages = value.messages != null;
 
-  if (hasSources === hasMessages) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Provide exactly one of 'sources' or 'messages'",
-      path: ["sources"],
-    });
-  }
-});
+    if (hasSources === hasMessages) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Provide exactly one of 'sources' or 'messages'",
+        path: ["sources"],
+      });
+    }
+  });
 
 export const AddMemoryResponseSchema = z.object({
   job_id: z.string().uuid(),

@@ -30,6 +30,7 @@
   "scripts": {
     "build": "tsc",
     "build:docker": "bun build ./src/stdio.ts ./src/http.ts ./src/server.ts --outdir ./dist --target node --splitting",
+    "postinstall": "node dist/postinstall.js",
     "dev": "bun run --watch src/stdio.ts",
     "dev:http": "bun run --watch src/http.ts",
     "start": "bun run src/stdio.ts",

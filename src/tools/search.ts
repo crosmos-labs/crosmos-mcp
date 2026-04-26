@@ -23,7 +23,8 @@ export const searchToolDefinition: Tool = {
       space_id: {
         type: "string",
         format: "uuid",
-        description: "The memory space to search within. If omitted, uses DEFAULT_SPACE_ID env var or auto-detects from available spaces.",
+        description:
+          "The memory space to search within. If omitted, uses DEFAULT_SPACE_ID env var or auto-detects from available spaces.",
       },
     },
     required: ["query"],
@@ -51,8 +52,12 @@ export async function handleSearch(input: unknown, authToken?: string): Promise<
   const response = await memoryClient.search(parsed.data, authToken);
   const parsedResponse = SearchResponseSchema.safeParse(response);
   if (!parsedResponse.success) {
-    const issues = parsedResponse.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
-    throw new Error(`Invalid response from API: ${issues}. Raw keys: ${Object.keys(response as object).join(", ")}, candidate keys: ${response.candidates?.length ? Object.keys(response.candidates[0] as object).join(", ") : "none"}`);
+    const issues = parsedResponse.error.issues
+      .map((i) => `${i.path.join(".")}: ${i.message}`)
+      .join("; ");
+    throw new Error(
+      `Invalid response from API: ${issues}. Raw keys: ${Object.keys(response as object).join(", ")}, candidate keys: ${response.candidates?.length ? Object.keys(response.candidates[0] as object).join(", ") : "none"}`
+    );
   }
   return parsedResponse.data;
 }
