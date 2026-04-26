@@ -43,6 +43,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
+    "@clack/prompts": "^1.2.0",
     "@modelcontextprotocol/sdk": "^1.10.0",
     "zod": "^3.24.0"
   },

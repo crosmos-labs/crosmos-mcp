@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { authLogin, authLogout, authStatus } from "./auth.js";
+import * as p from "./clack.js";
 import { promptSkillInstall } from "./skill.js";
 
 function getVersion(): string {
@@ -20,12 +21,12 @@ export function printHelp(): void {
 
 Usage:
   crosmos-mcp                            Start the MCP server (stdio transport)
-  crosmos-mcp setup                      Interactive setup (API key + skill install)
-  crosmos-mcp auth login                 Authenticate with your Crosmos API key
+  crosmos-mcp setup                      Interactive setup (API key + skill)
+  crosmos-mcp auth login                 Authenticate with your API key
   crosmos-mcp auth login --base-url URL  Use a custom API base URL
   crosmos-mcp auth logout                Remove stored credentials
-  crosmos-mcp auth status                Show current authentication state
-  crosmos-mcp skill install <client>    Install the Crosmos skill for your client
+  crosmos-mcp auth status                Show current auth state
+  crosmos-mcp skill install <client>     Install the Crosmos skill
 
 Options:
   --help, -h               Show this help message
@@ -57,17 +58,11 @@ export async function handleAuthCommand(subcommand: string, args: string[]): Pro
       await authStatus();
       break;
     default:
-      process.stderr.write(`Unknown auth subcommand: ${subcommand}\n\n`);
-      process.stderr.write("Available commands:\n");
-      process.stderr.write(
-        "  crosmos-mcp auth login [--base-url URL]  Authenticate with your API key\n"
-      );
-      process.stderr.write(
-        "  crosmos-mcp auth logout                  Remove stored credentials\n"
-      );
-      process.stderr.write(
-        "  crosmos-mcp auth status                   Show current authentication state\n"
-      );
+      p.log.error(`Unknown auth subcommand: ${subcommand}`);
+      process.stderr.write("\nAvailable commands:\n");
+      process.stderr.write("  crosmos-mcp auth login [--base-url URL]\n");
+      process.stderr.write("  crosmos-mcp auth logout\n");
+      process.stderr.write("  crosmos-mcp auth status\n");
       process.exit(1);
   }
 }
@@ -78,21 +73,20 @@ export async function handleSetupCommand(args: string[]): Promise<void> {
   const { readCredentials } = await import("./credentials.js");
   const creds = readCredentials();
 
+  p.intro("Crosmos MCP Setup");
+
   const needsAuth = !envKey && !creds;
 
   if (needsAuth) {
-    process.stderr.write("Step 1: Authentication\n");
-    process.stderr.write("─────────────────────\n");
+    p.log.info("Get an API key at https://console.crosmos.dev/");
     await authLogin(baseUrl);
   } else {
-    process.stderr.write("Authentication: already configured ✓\n\n");
+    p.log.success("Already authenticated");
   }
 
-  process.stderr.write("\nStep 2: Skill Installation\n");
-  process.stderr.write("────────────────────────\n");
   await promptSkillInstall();
 
-  process.stderr.write("\nSetup complete! Crosmos MCP is ready to use.\n");
+  p.outro("Done! Crosmos MCP is ready.");
 }
 
 function parseBaseUrlFlag(args: string[]): string | undefined {

@@ -1,4 +1,4 @@
-import { createInterface } from "node:readline";
+import * as p from "./clack.js";
 import {
   type Credentials,
   deleteCredentials,
@@ -6,20 +6,6 @@ import {
   readCredentials,
   writeCredentials,
 } from "./credentials.js";
-
-function prompt(question: string): Promise<string> {
-  const rl = createInterface({
-    input: process.stdin,
-    output: process.stderr,
-  });
-
-  return new Promise((resolve) => {
-    rl.question(question, (answer) => {
-      rl.close();
-      resolve(answer.trim());
-    });
-  });
-}
 
 async function validateApiKey(apiKey: string, baseUrl: string): Promise<boolean> {
   try {
@@ -41,10 +27,12 @@ export async function authLogin(baseUrlOverride?: string): Promise<void> {
 
   if (existing) {
     const masked = `${existing.api_key.slice(0, 8)}...${existing.api_key.slice(-4)}`;
-    process.stderr.write(`Existing credentials found (key: ${masked})\n`);
-    const answer = await prompt("Replace? [y/N] ");
-    if (answer.toLowerCase() !== "y" && answer.toLowerCase() !== "yes") {
-      process.stderr.write("Login cancelled.\n");
+    const replace = await p.confirm({
+      message: `Found existing key (${masked}). Replace?`,
+      initialValue: false,
+    });
+    if (!replace) {
+      p.log.info("Login cancelled.");
       return;
     }
   }
@@ -54,45 +42,63 @@ export async function authLogin(baseUrlOverride?: string): Promise<void> {
     ""
   );
 
-  const apiKey = await prompt("Enter your Crosmos API key: ");
+  const apiKey = await p.text({
+    message: "Enter your Crosmos API key",
+    placeholder: "csk_...",
+    validate: (v) => {
+      if (!v) return "Press Enter to skip, or paste your key";
+    },
+  });
 
-  if (!apiKey) {
-    process.stderr.write(
-      "\nSkipped. Set the CROSMOS_API_KEY environment variable to authenticate at runtime.\n"
-    );
+  if (p.isCancel(apiKey) || !apiKey) {
+    p.log.info("Skipped. Get a key at https://console.crosmos.dev/");
     return;
   }
 
-  process.stderr.write("Validating API key...\n");
-  const valid = await validateApiKey(apiKey, baseUrl);
+  const s = p.spinner();
+  s.start("Validating API key...");
+
+  const valid = await validateApiKey(apiKey as string, baseUrl);
 
   if (!valid) {
-    process.stderr.write("Invalid API key. Could not authenticate with the Crosmos API.\n");
-    process.stderr.write("Please check your key and try again.\n");
+    s.stop("Invalid API key");
+    p.log.error("Could not authenticate with the Crosmos API.");
+    p.log.info("Check your key at https://console.crosmos.dev/");
     return;
   }
 
+  s.stop("Valid API key");
+
   writeCredentials({
-    api_key: apiKey,
+    api_key: apiKey as string,
     base_url: baseUrl,
   });
 
-  process.stderr.write("Credentials saved successfully.\n");
+  p.log.success("Credentials saved.");
 }
 
 export async function authLogout(): Promise<void> {
   const existing = readCredentials();
 
   if (!existing) {
-    process.stderr.write("No credentials found.\n");
+    p.log.info("No credentials found.");
     return;
   }
 
   const masked = `${existing.api_key.slice(0, 8)}...${existing.api_key.slice(-4)}`;
-  process.stderr.write(`Removing credentials for key: ${masked}\n`);
+
+  const confirm = await p.confirm({
+    message: `Remove key ${masked}?`,
+    initialValue: true,
+  });
+
+  if (p.isCancel(confirm) || !confirm) {
+    p.log.info("Logout cancelled.");
+    return;
+  }
 
   deleteCredentials();
-  process.stderr.write("Credentials removed.\n");
+  p.log.success("Credentials removed.");
 }
 
 export async function authStatus(): Promise<void> {
@@ -100,22 +106,18 @@ export async function authStatus(): Promise<void> {
   const envUrl = process.env.CROSMOS_API_BASE_URL;
   const creds = readCredentials();
 
-  process.stderr.write("Crosmos MCP Authentication Status\n");
-  process.stderr.write("──────────────────────────────────\n");
-
   if (envKey) {
-    process.stderr.write("API key: set via CROSMOS_API_KEY (env var)\n");
+    p.log.success("API key: set via CROSMOS_API_KEY");
   } else if (creds) {
     const masked = `${creds.api_key.slice(0, 8)}...${creds.api_key.slice(-4)}`;
-    process.stderr.write(`API key: ${masked} (from ~/.crosmos/credentials.json)\n`);
+    p.log.success(`API key: ${masked}`);
   } else {
-    process.stderr.write("API key: not configured\n");
-    process.stderr.write("\nRun `crosmos-mcp auth login` to authenticate.\n");
+    p.log.warn("API key: not configured");
+    p.log.info("Run `crosmos-mcp auth login` or get a key at https://console.crosmos.dev/");
     return;
   }
 
   const baseUrl = envUrl?.replace(/\/$/, "") ?? creds?.base_url ?? "https://api.crosmos.dev";
-  process.stderr.write(
-    `Base URL: ${baseUrl}${envUrl ? " (from CROSMOS_API_BASE_URL env var)" : creds?.base_url ? " (from credentials)" : " (default)"}\n`
-  );
+  const source = envUrl ? " (env)" : creds?.base_url ? " (saved)" : " (default)";
+  p.log.info(`Base URL: ${baseUrl}${source}`);
 }

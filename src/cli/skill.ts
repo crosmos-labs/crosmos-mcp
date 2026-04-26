@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { createInterface } from "node:readline";
+import * as p from "./clack.js";
 
 const SKILL_CONTENT = `---
 name: crosmos-memory
@@ -36,81 +36,200 @@ An agent using Crosmos should **automatically** decide whether to store or retri
 
 ## MCP Tools
 
-### \`crosmos_add_memory\`
+### \\\`crosmos_add_memory\\\`
 
 Store information into the knowledge graph. The LLM extraction pipeline handles entity and relationship extraction automatically.
 
 **When**: User shares facts, preferences, experiences, or conversation context.
 
-\`\`\`json
+\\\`\\\`\\\`json
 {
-  "space_id": "<from list_spaces>",
+  "space_id": 1,
   "sources": [
     {"content": "User prefers dark mode and uses Neovim as their primary editor"}
   ]
 }
-\`\`\`
+\\\`\\\`\\\`
 
-### \`crosmos_search_memories\`
+For multi-turn conversations, use the messages format:
+
+\\\`\\\`\\\`json
+{
+  "space_id": 1,
+  "messages": [
+    {"role": "user", "content": "I just got back from Tokyo"},
+    {"role": "assistant", "content": "How was it?"},
+    {"role": "user", "content": "Amazing, I visited Shibuya and ate at Ichiran ramen"}
+  ],
+  "session_id": "tokyo-trip-2024"
+}
+\\\`\\\`\\\`
+
+### \\\`crosmos_search_memories\\\`
 
 Retrieve relevant memories using hybrid search (semantic + keyword + graph).
 
 **When**: User asks about themselves, past preferences, or anything requiring memory context.
 
-\`\`\`json
+\\\`\\\`\\\`json
 {
   "query": "What editor does the user prefer?",
-  "space_id": "<from list_spaces>"
+  "space_id": 1
 }
-\`\`\`
+\\\`\\\`\\\`
 
-### \`crosmos_list_spaces\`
+Optional parameters:
+- \\\`limit\\\` (1-50, default 10): Number of results
+- \\\`rerank\\\` (boolean, default true): Cross-encoder reranking for precision
+- \\\`graph\\\` (boolean, default true): Include graph traversal signal (disable for faster keyword+semantic only)
 
-List all memory spaces. Call this first if you don't have a space_id yet.
+### \\\`crosmos_list_spaces\\\`
 
-\`\`\`json
+List all memory spaces the user has access to.
+
+\\\`\\\`\\\`json
 {}
-\`\`\`
+\\\`\\\`\\\`
 
-### \`crosmos_health_check\`
+### \\\`crosmos_health_check\\\`
 
 Verify the API is operational.
 
-\`\`\`json
+\\\`\\\`\\\`json
 {}
-\`\`\`
+\\\`\\\`\\\`
+
+---
+
+## API Endpoints
+
+### Ingestion
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| \\\`/api/v1/sources\\\` | POST | Ingest raw content (text, markdown). Returns \\\`job_id\\\` for async processing. |
+| \\\`/api/v1/conversations\\\` | POST | Ingest multi-turn conversations with auto-segmentation and lookback. Returns \\\`job_id\\\`. |
+| \\\`/api/v1/jobs/{job_id}\\\` | GET | Poll ingestion job status. |
+
+### Retrieval & Exploration
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| \\\`/api/v1/search\\\` | POST | Hybrid retrieval (semantic + keyword + graph). Returns scored candidates with \\\`total\\\` and \\\`took_ms\\\`. |
+| \\\`/api/v1/entities\\\` | GET | List/search entities with edge counts. |
+| \\\`/api/v1/entities/{id}\\\` | GET | Entity detail with recent memories. |
+| \\\`/api/v1/graph\\\` | GET | Graph viewport — nodes + edges for visualization. |
+| \\\`/api/v1/graph/stats\\\` | GET | Entity type distribution, top relations, totals. |
+
+### Memory Management
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| \\\`/api/v1/spaces\\\` | POST | Create memory space |
+| \\\`/api/v1/spaces\\\` | GET | List all spaces |
+| \\\`/api/v1/spaces/{id}\\\` | GET | Get space details |
+| \\\`/api/v1/spaces/{id}\\\` | DELETE | Delete space and all contents |
+| \\\`/api/v1/memories?space_id=X\\\` | GET | List memories in a space |
+| \\\`/api/v1/memories/{id}\\\` | GET | Get memory by ID |
+| \\\`/api/v1/memories/{id}\\\` | DELETE | Soft-delete a memory |
 
 ---
 
 ## Conversation Flow
 
+### Typical agent loop:
+
+\\\`\\\`\\\`
 1. Receive user message
 2. Search memories for relevant context → search_memories
 3. Generate response using retrieved context
 4. If new facts emerged → add_memory (ingest conversation turn)
+\\\`\\\`\\\`
 
 ### Single-turn ingest:
+\\\`\\\`\\\`
 User: "I work at Anthropic on Claude safety"
 Agent: add_memory → store the fact
 Agent: "Got it, I'll remember you work at Anthropic."
+\\\`\\\`\\\`
 
 ### Question-answering:
+\\\`\\\`\\\`
 User: "What editor do I use?"
 Agent: search_memories → finds "User prefers Neovim"
 Agent: "You prefer Neovim as your primary editor."
+\\\`\\\`\\\`
 
 ### Correcting facts (monotonic — new edges, no deletion):
+\\\`\\\`\\\`
 User: "I switched from VS Code to Neovim"
 Agent: add_memory → new edge (USER USES Neovim) with valid_from
        The old edge (USER USES VS Code) remains but with temporal context
 Agent: "Updated! You now use Neovim."
+\\\`\\\`\\\`
+
+---
+
+## Search Response Format
+
+\\\`\\\`\\\`json
+{
+  "query": "what editor does the user prefer",
+  "candidates": [
+    {
+      "memory_id": 123,
+      "content": "User prefers dark mode in all editors and uses Neovim as primary editor",
+      "memory_type": "viewpoint",
+      "score": 0.95,
+      "created_at": "2024-03-15T10:30:00Z",
+      "recorded_at": "2024-03-15T10:30:00Z",
+      "event_time": null
+    }
+  ],
+  "total": 5,
+  "took_ms": 120.5
+}
+\\\`\\\`\\\`
+
+---
+
+## Data Model
+
+\\\`\\\`\\\`
+MemorySpace (Container)
+    ├── Sources (raw content: text, markdown, conversations)
+    │       ├── content_type: text | markdown | html | json | pdf | ...
+    │       ├── sequence: int (order within batch)
+    │       └── meta: JSONB (session_id, lookback_context, etc.)
+    │
+    ├── Memories (atomic facts)
+    │       ├── memory_type: viewpoint | semantic | episode | inference
+    │       ├── importance_score: 0.3 (minor) → 0.9 (identity-defining)
+    │       ├── event_time: when the event occurred (ISO8601)
+    │       ├── recorded_at: when the memory was stored
+    │       ├── forgotten_at: nullable (soft delete)
+    │       └── SourceMemory (junction: memory → source)
+    │
+    ├── Entities (graph nodes)
+    │       ├── name: canonical name (casefold dedup)
+    │       ├── entity_type: person | organization | technology | project | location | object | concept
+    │       ├── embedding: 1536-dim vector for semantic search
+    │       └── MemoryEntity (junction: memory → entity)
+    │
+    └── Edges (ERE relations)
+            ├── source_entity → target_entity
+            ├── relation_type: WORKS_FOR | PREFERS | LIKES | DISLIKES | USES | VISITED | ...
+            ├── confidence: 0.0–1.0
+            ├── valid_from: when the relation became true
+            └── recorded_at: when the edge was created
+\\\`\\\`\\\`
 
 ---
 
 ## Key Concepts
 
 ### Monotonic Temporal Knowledge Graph
-The graph only grows: G(t+1) = G(t) ∪ Δ. No updates, no deletions. Knowledge corrections create new edges with temporal context, not replacements.
+The graph only grows: \\\`G(t+1) = G(t) ∪ Δ\\\`. No updates, no deletions. Knowledge corrections create new edges with temporal context, not replacements.
 
 ### Hybrid Retrieval Pipeline
 Four parallel signals fused via Reciprocal Rank Fusion:
@@ -119,8 +238,22 @@ Four parallel signals fused via Reciprocal Rank Fusion:
 3. **Graph** — 3-seed BFS traversal through entity relationships
 4. **Temporal** — Event-time-aware recency boost
 
+### Extraction Pipeline
+Content → Segment (conversations) → Extract memories/entities/relations (LLM) → Resolve entities (3-stage: embedding → fuzzy → dedup) → Create edges → Embed and store.
+
 ### Entity Resolution
 3-stage: embedding pre-filter → rapidfuzz deterministic → casefold name dedup (first-wins).
+
+---
+
+## Best Practices
+
+1. **One space per user** for personal assistants; one space per project for team agents
+2. **Use conversations endpoint** for multi-turn chats — it handles segmentation and lookback automatically
+3. **Include session_date** for temporal reasoning — the system extracts relative dates to absolute timestamps
+4. **Poll job status after ingestion** — extraction is async, wait for \\\`status: "completed"\\\` before searching
+5. **Set \\\`graph: false\\\`** on search if you only need keyword+semantic for faster results
+6. **Soft-delete memories** via DELETE — they get \\\`forgotten_at\\\` set, excluded from retrieval but preserved in the graph
 `;
 
 export type ClientId = "opencode" | "cursor" | "claude-code" | "windsurf" | "vscode";
@@ -212,75 +345,41 @@ export function getClientName(client: ClientId): string {
   return CLIENT_CONFIGS[client].name;
 }
 
-async function prompt(question: string): Promise<string> {
-  const rl = createInterface({ input: process.stdin, output: process.stderr });
-  return new Promise((resolve) => {
-    rl.question(question, (answer) => {
-      rl.close();
-      resolve(answer.trim());
-    });
-  });
-}
-
 export async function promptSkillInstall(): Promise<void> {
   const detected = detectInstalledClients();
 
-  if (detected.length === 0) {
-    process.stderr.write("No supported clients detected on this system.\n");
-    process.stderr.write("Available clients: opencode, claude-code, cursor, windsurf, vscode\n\n");
-    process.stderr.write("Run `crosmos-mcp skill install <client>` to install manually.\n");
+  const selectedClients = await p.multiselect({
+    message: "Install Crosmos skill for:",
+    options: CLIENT_ORDER.map((id) => {
+      const config = CLIENT_CONFIGS[id];
+      const isDetected = detected.includes(id);
+      return {
+        value: id,
+        label: config.name,
+        hint: isDetected ? "detected" : undefined,
+      };
+    }),
+    initialValues: detected,
+    required: false,
+  });
+
+  if (
+    p.isCancel(selectedClients) ||
+    !Array.isArray(selectedClients) ||
+    selectedClients.length === 0
+  ) {
+    p.log.info("Skipped skill installation. Run `crosmos-mcp skill install <client>` anytime.");
     return;
   }
 
-  process.stderr.write("Which clients should the Crosmos skill be installed for?\n\n");
-
-  const choices: { id: ClientId; selected: boolean }[] = CLIENT_ORDER.map((id) => ({
-    id,
-    selected: detected.includes(id),
-  }));
-
-  for (let i = 0; i < choices.length; i++) {
-    const { id, selected } = choices[i];
-    const config = CLIENT_CONFIGS[id];
-    const detected标记 = detected.includes(id) ? "(detected)" : "";
-    const check = selected ? "[x]" : "[ ]";
-    process.stderr.write(`  ${i + 1}. ${check} ${config.name} ${detected标记}\n`);
-  }
-
-  process.stderr.write(
-    "\nEnter numbers to toggle (e.g. '1 3 5'), or press Enter to accept defaults:\n"
-  );
-
-  const answer = await prompt("> ");
-
-  if (answer) {
-    const toggled = answer
-      .split(/\s+/)
-      .map((n) => Number.parseInt(n, 10) - 1)
-      .filter((n) => !Number.isNaN(n) && n >= 0 && n < choices.length);
-
-    if (toggled.length > 0) {
-      for (const idx of choices.keys()) {
-        choices[idx].selected = false;
-      }
-      for (const idx of toggled) {
-        choices[idx].selected = true;
-      }
-    }
-  }
-
-  process.stderr.write("\n");
-
-  for (const choice of choices) {
-    if (!choice.selected) continue;
-    const result = installSkill(choice.id);
-    const config = CLIENT_CONFIGS[choice.id];
+  for (const item of selectedClients) {
+    const clientId = item.value as ClientId;
+    const config = CLIENT_CONFIGS[clientId];
+    const result = installSkill(clientId);
     if (result === "already_exists") {
-      process.stderr.write(`  ✓ ${config.name} — skill already installed\n`);
+      p.log.success(`${config.name} — already installed`);
     } else {
-      process.stderr.write(`  ✓ ${config.name} — skill installed at ${config.skillDir}/SKILL.md\n`);
+      p.log.success(`${config.name} — installed`);
     }
   }
-
-  process.stderr.write("\n");
 }
