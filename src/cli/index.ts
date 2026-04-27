@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { authLogin, authLogout, authStatus } from "./auth.js";
 import * as p from "./clack.js";
+import { promptClientInstall } from "./client-install.js";
 import { promptSkillInstall } from "./skill.js";
 
 function getVersion(): string {
@@ -21,7 +22,7 @@ export function printHelp(): void {
 
 Usage:
   crosmos-mcp                            Start the MCP server (stdio transport)
-  crosmos-mcp setup                      Interactive setup (API key + skill)
+  crosmos-mcp setup                      Interactive setup (auth + client install + skill)
   crosmos-mcp auth login                 Authenticate with your API key
   crosmos-mcp auth login --base-url URL  Use a custom API base URL
   crosmos-mcp auth logout                Remove stored credentials
@@ -84,6 +85,8 @@ export async function handleSetupCommand(args: string[]): Promise<void> {
   } else {
     p.log.success("Already authenticated");
   }
+
+  await promptClientInstall();
 
   await promptSkillInstall();
 
