@@ -2,13 +2,13 @@
 
 > **Beta** — Crosmos is in early access. APIs and features may change. Feedback welcome at [github.com/crosmos-org/crosmos-mcp](https://github.com/crosmos-org/crosmos-mcp).
 
-MCP server for the Crosmos Memory Engine — persistent memory with semantic, keyword, and graph retrieval for AI agents.
+MCP server for the Crosmos memory layer.
 
 ## Tools
 
 | Tool | Description |
 |------|-------------|
-| `crosmos_search_memories` | Hybrid retrieval (semantic + keyword + graph) |
+| `crosmos_search_memories` | Semantic + keyword + graph retrieval |
 | `crosmos_add_memory` | Store content with auto entity/relation extraction |
 | `crosmos_list_spaces` | List available memory spaces |
 | `crosmos_health_check` | Verify API connectivity and status |
@@ -22,20 +22,17 @@ npx @crosmos/crosmos-mcp setup
 This runs the interactive setup:
 
 1. **Authenticate** — Enter your API key (get one at [console.crosmos.dev](https://console.crosmos.dev/))
-2. **Install skill** — Auto-detects your AI editor(s) and installs the Crosmos skill
+2. **Install to clients** — Auto-detects installed MCP clients (Claude Desktop, Claude Code, opencode, Cursor, VS Code, Windsurf, Cline, Roo-Cline, Zed) and writes the server config
+3. **Install skill** — Auto-detects your AI editor(s) and installs the Crosmos skill
+
+No global install needed — `npx` handles everything. Clients are configured to run `npx -y @crosmos/crosmos-mcp` so they always pick up the latest version.
 
 ## Manual Setup
 
-### 1. Install
+### 1. Authenticate
 
 ```bash
-npm install -g @crosmos/crosmos-mcp
-```
-
-### 2. Authenticate
-
-```bash
-crosmos-mcp auth login
+npx @crosmos/crosmos-mcp auth login
 ```
 
 Or set the environment variable:
@@ -44,18 +41,7 @@ Or set the environment variable:
 export CROSMOS_API_KEY=csk_your_api_key_here
 ```
 
-### 3. Configure your client
-
-<details>
-<summary>Claude Code</summary>
-
-```bash
-claude mcp add crosmos-memory -- crosmos-mcp
-```
-
-The API key from `auth login` is picked up automatically. No env vars needed.
-
-</details>
+### 2. Configure your client
 
 <details>
 <summary>Claude Desktop</summary>
@@ -69,13 +55,20 @@ Config location:
 {
   "mcpServers": {
     "crosmos-memory": {
-      "command": "crosmos-mcp",
-      "env": {
-        "CROSMOS_API_KEY": "csk_your_api_key_here"
-      }
+      "command": "npx",
+      "args": ["-y", "@crosmos/crosmos-mcp"]
     }
   }
 }
+```
+
+</details>
+
+<details>
+<summary>Claude Code</summary>
+
+```bash
+claude mcp add crosmos-memory -- npx -y @crosmos/crosmos-mcp
 ```
 
 </details>
@@ -85,40 +78,79 @@ Config location:
 
 `~/.config/opencode/opencode.json`:
 
-If you've installed globally (`npm install -g @crosmos/crosmos-mcp`):
-
 ```json
 {
   "mcp": {
     "crosmos-memory": {
       "type": "local",
-      "command": ["crosmos-mcp"]
+      "command": ["npx", "-y", "@crosmos/crosmos-mcp"]
     }
   }
 }
 ```
 
-Otherwise, run via `npx` (no global install needed):
+</details>
+
+<details>
+<summary>Cursor</summary>
+
+`~/.cursor/mcp.json`:
 
 ```json
 {
-  "mcp": {
+  "mcpServers": {
     "crosmos-memory": {
-      "type": "local",
-      "command": ["npx", "@crosmos/crosmos-mcp"]
+      "command": "npx",
+      "args": ["-y", "@crosmos/crosmos-mcp"]
     }
   }
 }
 ```
 
-The API key from `auth login` is picked up automatically.
+</details>
+
+<details>
+<summary>VS Code</summary>
+
+- **macOS**: `~/Library/Application Support/Code/User/mcp.json`
+- **Linux**: `~/.config/Code/User/mcp.json`
+- **Windows**: `%APPDATA%\Code\User\mcp.json`
+
+```json
+{
+  "servers": {
+    "crosmos-memory": {
+      "command": "npx",
+      "args": ["-y", "@crosmos/crosmos-mcp"]
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Windsurf</summary>
+
+`~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "crosmos-memory": {
+      "command": "npx",
+      "args": ["-y", "@crosmos/crosmos-mcp"]
+    }
+  }
+}
+```
 
 </details>
 
 <details>
 <summary>Other MCP clients</summary>
 
-The server uses stdio transport. Point your client to `crosmos-mcp` and set:
+The server uses stdio transport. Point your client to `npx -y @crosmos/crosmos-mcp` and set:
 
 | Variable | Value |
 |----------|-------|
@@ -127,22 +159,22 @@ The server uses stdio transport. Point your client to `crosmos-mcp` and set:
 
 </details>
 
-### 4. (Optional) Install the skill
+### 3. (Optional) Install the skill
 
 ```bash
-crosmos-mcp skill install opencode    # or: cursor, claude-code, windsurf, vscode
+npx @crosmos/crosmos-mcp skill install opencode    # or: cursor, claude-code, windsurf, vscode
 ```
 
 ## CLI Reference
 
 ```bash
-crosmos-mcp                          # Start MCP server (stdio)
-crosmos-mcp setup                    # Interactive setup (auth + skill)
-crosmos-mcp auth login               # Authenticate with API key
-crosmos-mcp auth login --base-url URL # Custom API base URL
-crosmos-mcp auth logout              # Remove stored credentials
-crosmos-mcp auth status              # Show auth state
-crosmos-mcp skill install <client>   # Install Crosmos skill
+npx @crosmos/crosmos-mcp                     # Start MCP server (stdio)
+npx @crosmos/crosmos-mcp setup               # Interactive setup (auth + client install + skill)
+npx @crosmos/crosmos-mcp auth login          # Authenticate with API key
+npx @crosmos/crosmos-mcp auth login --base-url URL # Custom API base URL
+npx @crosmos/crosmos-mcp auth logout         # Remove stored credentials
+npx @crosmos/crosmos-mcp auth status         # Show auth state
+npx @crosmos/crosmos-mcp skill install <client>  # Install Crosmos skill
 ```
 
 ## Environment Variables
@@ -156,17 +188,6 @@ crosmos-mcp skill install <client>   # Install Crosmos skill
 | `DEFAULT_SPACE_NAME` | Default memory space name (resolved via `/spaces?name=`); ignored if `DEFAULT_SPACE_ID` is set | — |
 
 Credential resolution order: `CROSMOS_API_KEY` env var → `~/.crosmos/credentials.json` → error.
-
-## Postinstall Script
-
-After `npm install`, `dist/postinstall.js` runs automatically. It:
-
-1. In a TTY: launches the interactive setup (auth + skill install)
-2. In non-TTY (CI, Docker): prints a hint to run `npx @crosmos/crosmos-mcp setup`
-
-Credentials are stored at `~/.crosmos/credentials.json` (mode `0600`).
-
-The source is at [`src/postinstall.ts`](src/postinstall.ts) — feel free to audit it.
 
 ## Development
 
