@@ -44,7 +44,7 @@ Store information into the knowledge graph. The LLM extraction pipeline handles 
 
 \\\`\\\`\\\`json
 {
-  "space_id": 1,
+  "space_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "sources": [
     {"content": "User prefers dark mode and uses Neovim as their primary editor"}
   ]
@@ -55,7 +55,7 @@ For multi-turn conversations, use the messages format:
 
 \\\`\\\`\\\`json
 {
-  "space_id": 1,
+  "space_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "messages": [
     {"role": "user", "content": "I just got back from Tokyo"},
     {"role": "assistant", "content": "How was it?"},
@@ -74,7 +74,7 @@ Retrieve relevant memories using hybrid search (semantic + keyword + graph).
 \\\`\\\`\\\`json
 {
   "query": "What editor does the user prefer?",
-  "space_id": 1
+  "space_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 }
 \\\`\\\`\\\`
 

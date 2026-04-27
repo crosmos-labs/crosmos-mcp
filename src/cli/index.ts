@@ -36,7 +36,8 @@ Environment Variables:
   CROSMOS_API_KEY           API key (overrides credentials file)
   CROSMOS_API_BASE_URL      API base URL (default: https://api.crosmos.dev)
   CROSMOS_API_TIMEOUT       Request timeout in ms (default: 30000)
-  DEFAULT_SPACE_ID          Default space ID to use
+  DEFAULT_SPACE_ID          Default space UUID to use
+  DEFAULT_SPACE_NAME        Default space name (resolved to UUID via /spaces?name=); ignored if DEFAULT_SPACE_ID is set
 `);
 }
 

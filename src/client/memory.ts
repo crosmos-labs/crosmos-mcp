@@ -2,6 +2,8 @@ import { buildUrl, config } from "../config/index.js";
 import type {
   AddMemoryRequest,
   AddMemoryResponse,
+  IngestConversationRequest,
+  IngestSourcesRequest,
   SearchRequest,
   SearchResponse,
   SpaceListResponse,
@@ -64,13 +66,30 @@ export class MemoryClient {
   }
 
   async addMemory(params: AddMemoryRequest, authToken?: string): Promise<AddMemoryResponse> {
+    if (params.messages) {
+      const body: IngestConversationRequest = {
+        space_id: params.space_id,
+        messages: params.messages.messages,
+        session_id: params.messages.session_id ?? null,
+        session_date: params.messages.session_date ?? null,
+        meta: params.messages.meta ?? null,
+      };
+      const url = buildUrl(config.api, "conversations");
+      return this.request<AddMemoryResponse>(
+        url,
+        { method: "POST", body: JSON.stringify(body) },
+        authToken
+      );
+    }
+
+    const body: IngestSourcesRequest = {
+      space_id: params.space_id,
+      sources: params.sources ?? [],
+    };
     const url = buildUrl(config.api, "memoryAdd");
     return this.request<AddMemoryResponse>(
       url,
-      {
-        method: "POST",
-        body: JSON.stringify(params),
-      },
+      { method: "POST", body: JSON.stringify(body) },
       authToken
     );
   }
@@ -86,8 +105,9 @@ export class MemoryClient {
     );
   }
 
-  async listSpaces(authToken?: string): Promise<SpaceListResponse> {
-    const url = buildUrl(config.api, "spaces");
+  async listSpaces(authToken?: string, name?: string): Promise<SpaceListResponse> {
+    const base = buildUrl(config.api, "spaces");
+    const url = name ? `${base}?name=${encodeURIComponent(name)}` : base;
     return this.request<SpaceListResponse>(
       url,
       {
@@ -97,6 +117,8 @@ export class MemoryClient {
     );
   }
 
+  private resolvedSpaceIdByName = new Map<string, string>();
+
   async resolveSpaceId(spaceId: string | undefined, authToken?: string): Promise<string> {
     if (spaceId !== undefined) {
       return spaceId;
@@ -104,6 +126,24 @@ export class MemoryClient {
 
     if (config.defaults.spaceId !== undefined) {
       return config.defaults.spaceId;
+    }
+
+    const name = config.defaults.spaceName;
+    if (name !== undefined) {
+      const cacheKey = `${authToken ?? ""}::${name}`;
+      const cached = this.resolvedSpaceIdByName.get(cacheKey);
+      if (cached !== undefined) {
+        return cached;
+      }
+      const spaces = await this.listSpaces(authToken, name);
+      const match = spaces.spaces[0];
+      if (match === undefined) {
+        throw new Error(
+          `No memory space found with name "${name}". Set DEFAULT_SPACE_ID or create the space first.`
+        );
+      }
+      this.resolvedSpaceIdByName.set(cacheKey, match.id);
+      return match.id;
     }
 
     const spaces = await this.listSpaces(authToken);

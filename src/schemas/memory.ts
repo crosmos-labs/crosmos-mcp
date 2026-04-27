@@ -20,8 +20,18 @@ export const MessagesPayloadSchema = z.object({
     .max(500, "Too many messages"),
   session_id: z.string().optional().nullable(),
   session_date: z.string().optional().nullable(),
-  segment_size: z.number().int().min(1).max(20).default(4),
-  lookback: z.number().int().min(0).max(20).default(4),
+  meta: z.record(z.unknown()).optional().nullable(),
+});
+
+export const IngestSourcesRequestSchema = z.object({
+  space_id: z.string().uuid("Space ID must be a UUID"),
+  sources: z
+    .array(SourcePayloadSchema)
+    .min(1, "At least one source is required"),
+});
+
+export const IngestConversationRequestSchema = MessagesPayloadSchema.extend({
+  space_id: z.string().uuid("Space ID must be a UUID"),
 });
 
 export const AddMemoryRequestSchema = z
@@ -56,5 +66,7 @@ export const AddMemoryResponseSchema = z.object({
 export type SourcePayload = z.infer<typeof SourcePayloadSchema>;
 export type ConversationMessagePayload = z.infer<typeof ConversationMessagePayloadSchema>;
 export type MessagesPayload = z.infer<typeof MessagesPayloadSchema>;
+export type IngestSourcesRequest = z.infer<typeof IngestSourcesRequestSchema>;
+export type IngestConversationRequest = z.infer<typeof IngestConversationRequestSchema>;
 export type AddMemoryRequest = z.infer<typeof AddMemoryRequestSchema>;
 export type AddMemoryResponse = z.infer<typeof AddMemoryResponseSchema>;

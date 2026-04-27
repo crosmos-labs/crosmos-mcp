@@ -7,6 +7,7 @@ export interface ApiEndpoints {
   routes: {
     search: string;
     memoryAdd: string;
+    conversations: string;
     health: string;
     spaces: string;
   };
@@ -16,6 +17,7 @@ export interface AppConfig {
   api: ApiEndpoints;
   defaults: {
     spaceId: string | undefined;
+    spaceName: string | undefined;
   };
 }
 
@@ -26,6 +28,7 @@ const createEndpoints = (baseUrl: string, timeout = 30000, apiKey?: string): Api
   routes: {
     search: "/api/v1/search",
     memoryAdd: "/api/v1/sources",
+    conversations: "/api/v1/conversations",
     health: "/health",
     spaces: "/api/v1/spaces",
   },
@@ -40,6 +43,7 @@ export function loadConfig(): AppConfig {
     api: createEndpoints(baseUrl, timeout, apiKey),
     defaults: {
       spaceId: process.env.DEFAULT_SPACE_ID || undefined,
+      spaceName: process.env.DEFAULT_SPACE_NAME || undefined,
     },
   };
 }

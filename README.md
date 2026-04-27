@@ -152,7 +152,8 @@ crosmos-mcp skill install <client>   # Install Crosmos skill
 | `CROSMOS_API_KEY` | API key (overrides credentials file) | — |
 | `CROSMOS_API_BASE_URL` | API base URL | `https://api.crosmos.dev` |
 | `CROSMOS_API_TIMEOUT` | Request timeout (ms) | `30000` |
-| `DEFAULT_SPACE_ID` | Default memory space | `1` |
+| `DEFAULT_SPACE_ID` | Default memory space UUID | — |
+| `DEFAULT_SPACE_NAME` | Default memory space name (resolved via `/spaces?name=`); ignored if `DEFAULT_SPACE_ID` is set | — |
 
 Credential resolution order: `CROSMOS_API_KEY` env var → `~/.crosmos/credentials.json` → error.
 

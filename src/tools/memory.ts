@@ -84,19 +84,9 @@ export const addMemoryToolDefinition: Tool = {
             type: "string",
             description: "ISO datetime for the conversation reference time",
           },
-          segment_size: {
-            type: "integer",
-            description: "Messages per segment",
-            default: 4,
-            minimum: 1,
-            maximum: 20,
-          },
-          lookback: {
-            type: "integer",
-            description: "Number of prior segments included as context",
-            default: 4,
-            minimum: 0,
-            maximum: 20,
+          meta: {
+            type: "object",
+            description: "Optional metadata attached to all created sources",
           },
         },
         required: ["messages"],
@@ -121,8 +111,7 @@ export interface AddMemoryToolInput {
     }>;
     session_id?: string | null;
     session_date?: string | null;
-    segment_size?: number;
-    lookback?: number;
+    meta?: Record<string, unknown> | null;
   } | null;
 }
 
@@ -151,8 +140,7 @@ export async function handleAddMemory(
           })),
           session_id: rawInput.messages.session_id ?? null,
           session_date: rawInput.messages.session_date ?? null,
-          segment_size: rawInput.messages.segment_size ?? 4,
-          lookback: rawInput.messages.lookback ?? 4,
+          meta: rawInput.messages.meta ?? null,
         }
       : null,
   });
