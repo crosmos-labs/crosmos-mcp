@@ -256,7 +256,7 @@ Content → Segment (conversations) → Extract memories/entities/relations (LLM
 6. **Soft-delete memories** via DELETE — they get \\\`forgotten_at\\\` set, excluded from retrieval but preserved in the graph
 `;
 
-export type ClientId = "opencode" | "cursor" | "claude-code" | "windsurf" | "vscode";
+export type ClientId = "opencode" | "cursor" | "claude-code" | "windsurf" | "vscode" | "kimi-cli";
 
 interface ClientConfig {
   name: string;
@@ -298,9 +298,21 @@ const CLIENT_CONFIGS: Record<ClientId, ClientConfig> = {
       join(HOME, "AppData", "Local", "Programs", "Microsoft VS Code"),
     ],
   },
+  "kimi-cli": {
+    name: "Kimi CLI",
+    skillDir: join(HOME, ".kimi", "skills", "crosmos"),
+    detectPaths: [join(HOME, ".kimi")],
+  },
 };
 
-const CLIENT_ORDER: ClientId[] = ["opencode", "claude-code", "cursor", "windsurf", "vscode"];
+const CLIENT_ORDER: ClientId[] = [
+  "opencode",
+  "claude-code",
+  "cursor",
+  "windsurf",
+  "vscode",
+  "kimi-cli",
+];
 
 export function getAvailableClients(): ClientId[] {
   return [...CLIENT_ORDER];
