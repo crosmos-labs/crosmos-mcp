@@ -19,7 +19,8 @@ export type ClientId =
   | "windsurf"
   | "cline"
   | "roo-cline"
-  | "zed";
+  | "zed"
+  | "kimi-cli";
 
 interface ClientDef {
   id: ClientId;
@@ -179,6 +180,14 @@ function buildClients(): ClientDef[] {
       ],
       isCli: false,
     },
+    {
+      id: "kimi-cli",
+      name: "Kimi CLI",
+      section: "",
+      configPath: "",
+      detectPaths: [join(HOME, ".kimi")],
+      isCli: true,
+    },
   ];
 }
 
@@ -192,6 +201,7 @@ const CLIENT_ORDER: ClientId[] = [
   "cline",
   "roo-cline",
   "zed",
+  "kimi-cli",
 ];
 
 function getServerEntry(section: string): Record<string, unknown> {
@@ -250,24 +260,52 @@ function installToClient(clientId: ClientId): "installed" | "already_exists" | "
   if (!client) return "error";
 
   if (client.isCli) {
-    try {
-      execSync(`claude mcp add ${SERVER_NAME} -- ${SERVER_CMD} ${SERVER_ARGS.join(" ")}`, {
-        stdio: "pipe",
-        timeout: 30_000,
-      });
-      return "installed";
-    } catch {
+    if (client.id === "claude-code") {
       try {
-        const list = execSync("claude mcp list", {
+        execSync(`claude mcp add ${SERVER_NAME} -- ${SERVER_CMD} ${SERVER_ARGS.join(" ")}`, {
           stdio: "pipe",
-          encoding: "utf-8",
+          timeout: 30_000,
         });
-        if (list.includes(SERVER_NAME)) return "already_exists";
+        return "installed";
       } catch {
-        // ignore — will return error below
+        try {
+          const list = execSync("claude mcp list", {
+            stdio: "pipe",
+            encoding: "utf-8",
+          });
+          if (list.includes(SERVER_NAME)) return "already_exists";
+        } catch {
+          // ignore — will return error below
+        }
+        return "error";
       }
-      return "error";
     }
+
+    if (client.id === "kimi-cli") {
+      try {
+        execSync(
+          `kimi mcp add --transport stdio ${SERVER_NAME} -- ${SERVER_CMD} ${SERVER_ARGS.join(" ")}`,
+          {
+            stdio: "pipe",
+            timeout: 30_000,
+          }
+        );
+        return "installed";
+      } catch {
+        try {
+          const list = execSync("kimi mcp list", {
+            stdio: "pipe",
+            encoding: "utf-8",
+          });
+          if (list.includes(SERVER_NAME)) return "already_exists";
+        } catch {
+          // ignore — will return error below
+        }
+        return "error";
+      }
+    }
+
+    return "error";
   }
 
   const entry = getServerEntry(client.section);

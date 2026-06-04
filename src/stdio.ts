@@ -39,7 +39,7 @@ async function main(): Promise<void> {
       if (!client) {
         process.stderr.write("Usage: crosmos-mcp skill install <client>\n\n");
         process.stderr.write(
-          "Available clients: opencode, cursor, claude-code, windsurf, vscode\n"
+          "Available clients: opencode, cursor, claude-code, windsurf, vscode, kimi-cli\n"
         );
         process.exit(1);
       }
@@ -47,12 +47,12 @@ async function main(): Promise<void> {
       if (!dir) {
         process.stderr.write(`Unknown client: ${client}\n\n`);
         process.stderr.write(
-          "Available clients: opencode, cursor, claude-code, windsurf, vscode\n"
+          "Available clients: opencode, cursor, claude-code, windsurf, vscode, kimi-cli\n"
         );
         process.exit(1);
       }
       const result = installSkill(
-        client as "opencode" | "cursor" | "claude-code" | "windsurf" | "vscode"
+        client as "opencode" | "cursor" | "claude-code" | "windsurf" | "vscode" | "kimi-cli"
       );
       if (result === "already_exists") {
         process.stderr.write(`Skill already installed at ${dir}/SKILL.md\n`);
@@ -61,7 +61,9 @@ async function main(): Promise<void> {
       }
     } else {
       process.stderr.write("Usage: crosmos-mcp skill install <client>\n\n");
-      process.stderr.write("Available clients: opencode, cursor, claude-code, windsurf, vscode\n");
+      process.stderr.write(
+        "Available clients: opencode, cursor, claude-code, windsurf, vscode, kimi-cli\n"
+      );
       process.exit(1);
     }
     process.exit(0);
