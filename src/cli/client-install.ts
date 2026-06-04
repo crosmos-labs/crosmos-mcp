@@ -255,54 +255,41 @@ function mergeJsonConfig(
   return "installed";
 }
 
+function runCliInstall(addCmd: string, listCmd: string): "installed" | "already_exists" | "error" {
+  try {
+    execSync(addCmd, { stdio: "pipe", timeout: 30_000 });
+    return "installed";
+  } catch {
+    try {
+      const list = execSync(listCmd, {
+        stdio: "pipe",
+        encoding: "utf-8",
+      });
+      if (list.includes(SERVER_NAME)) return "already_exists";
+    } catch {
+      // ignore — will return error below
+    }
+    return "error";
+  }
+}
+
 function installToClient(clientId: ClientId): "installed" | "already_exists" | "error" {
   const client = buildClients().find((c) => c.id === clientId);
   if (!client) return "error";
 
   if (client.isCli) {
     if (client.id === "claude-code") {
-      try {
-        execSync(`claude mcp add ${SERVER_NAME} -- ${SERVER_CMD} ${SERVER_ARGS.join(" ")}`, {
-          stdio: "pipe",
-          timeout: 30_000,
-        });
-        return "installed";
-      } catch {
-        try {
-          const list = execSync("claude mcp list", {
-            stdio: "pipe",
-            encoding: "utf-8",
-          });
-          if (list.includes(SERVER_NAME)) return "already_exists";
-        } catch {
-          // ignore — will return error below
-        }
-        return "error";
-      }
+      return runCliInstall(
+        `claude mcp add ${SERVER_NAME} -- ${SERVER_CMD} ${SERVER_ARGS.join(" ")}`,
+        "claude mcp list"
+      );
     }
 
     if (client.id === "kimi-cli") {
-      try {
-        execSync(
-          `kimi mcp add --transport stdio ${SERVER_NAME} -- ${SERVER_CMD} ${SERVER_ARGS.join(" ")}`,
-          {
-            stdio: "pipe",
-            timeout: 30_000,
-          }
-        );
-        return "installed";
-      } catch {
-        try {
-          const list = execSync("kimi mcp list", {
-            stdio: "pipe",
-            encoding: "utf-8",
-          });
-          if (list.includes(SERVER_NAME)) return "already_exists";
-        } catch {
-          // ignore — will return error below
-        }
-        return "error";
-      }
+      return runCliInstall(
+        `kimi mcp add --transport stdio ${SERVER_NAME} -- ${SERVER_CMD} ${SERVER_ARGS.join(" ")}`,
+        "kimi mcp list"
+      );
     }
 
     return "error";
