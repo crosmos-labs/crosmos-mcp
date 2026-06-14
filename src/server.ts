@@ -80,7 +80,7 @@ export function createServer(): McpServer {
               content: s.content,
               content_type: s.content_type ?? "text",
               role: s.role ?? null,
-              sequence: s.sequence ?? 0,
+              visibility: s.visibility ?? "private",
               meta: s.meta ?? null,
             })),
             messages: input.messages
@@ -91,8 +91,7 @@ export function createServer(): McpServer {
                   })),
                   session_id: input.messages.session_id ?? null,
                   session_date: input.messages.session_date ?? null,
-                  segment_size: input.messages.segment_size ?? 4,
-                  lookback: input.messages.lookback ?? 4,
+                  visibility: input.messages.visibility ?? "private",
                 }
               : null,
           },

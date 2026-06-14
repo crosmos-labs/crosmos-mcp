@@ -37,10 +37,12 @@ export const addMemoryToolDefinition: Tool = {
               type: "string",
               description: "Speaker role (for conversation content)",
             },
-            sequence: {
-              type: "integer",
-              description: "Order within batch",
-              default: 0,
+            visibility: {
+              type: "string",
+              enum: ["private", "org"],
+              description:
+                "Read scope: 'private' (gated by the visibility graph) or 'org' (readable by everyone in the org)",
+              default: "private",
             },
             meta: {
               type: "object",
@@ -84,6 +86,13 @@ export const addMemoryToolDefinition: Tool = {
             type: "string",
             description: "ISO datetime for the conversation reference time",
           },
+          visibility: {
+            type: "string",
+            enum: ["private", "org"],
+            description:
+              "Read scope: 'private' (gated by the visibility graph) or 'org' (readable by everyone in the org)",
+            default: "private",
+          },
           meta: {
             type: "object",
             description: "Optional metadata attached to all created sources",
@@ -101,7 +110,7 @@ export interface AddMemoryToolInput {
     content: string;
     content_type?: string;
     role?: string | null;
-    sequence?: number;
+    visibility?: "private" | "org";
     meta?: Record<string, unknown> | null;
   }>;
   messages?: {
@@ -111,6 +120,7 @@ export interface AddMemoryToolInput {
     }>;
     session_id?: string | null;
     session_date?: string | null;
+    visibility?: "private" | "org";
     meta?: Record<string, unknown> | null;
   } | null;
 }
@@ -129,7 +139,7 @@ export async function handleAddMemory(
         content: s.content,
         content_type: s.content_type ?? "text",
         role: s.role ?? null,
-        sequence: s.sequence ?? 0,
+        visibility: s.visibility ?? "private",
         meta: s.meta ?? null,
       })) ?? null,
     messages: rawInput.messages
@@ -140,6 +150,7 @@ export async function handleAddMemory(
           })),
           session_id: rawInput.messages.session_id ?? null,
           session_date: rawInput.messages.session_date ?? null,
+          visibility: rawInput.messages.visibility ?? "private",
           meta: rawInput.messages.meta ?? null,
         }
       : null,
