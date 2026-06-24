@@ -16,21 +16,18 @@ export const MemoryCandidateSchema = z.object({
   content: z.string(),
   memory_type: z.string(),
   score: z.number(),
+  // Present only when the request sets include_source=true.
   source: z.string().nullable().optional().default(null),
   created_at: z.string().optional().default(""),
-  recorded_at: z.string().optional().default(""),
   event_time: z.string().nullable().optional().default(null),
-  // Per-candidate owner attribution (added with the org/visibility rollout).
-  // Null for org-level memories not attributable to a single user.
-  owner_id: z.string().uuid().nullable().optional().default(null),
+  // Per-candidate owner attribution (org/visibility rollout). Null for
+  // org-level memories not attributable to a single user.
   owner_name: z.string().nullable().optional().default(null),
 });
 
 export const SearchResponseSchema = z.object({
   query: z.string(),
   candidates: z.array(MemoryCandidateSchema),
-  total: z.number().optional().default(0),
-  took_ms: z.number().optional().default(0),
 });
 
 export type SearchRequest = z.infer<typeof SearchRequestSchema>;

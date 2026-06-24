@@ -115,7 +115,7 @@ Verify the API is operational.
 
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
-| \\\`/api/v1/search\\\` | POST | Hybrid retrieval (semantic + keyword + graph). Returns scored candidates with \\\`total\\\` and \\\`took_ms\\\`. |
+| \\\`/api/v1/search\\\` | POST | Hybrid retrieval (semantic + keyword + graph). Returns scored candidates. |
 | \\\`/api/v1/entities\\\` | GET | List/search entities with edge counts. |
 | \\\`/api/v1/entities/{id}\\\` | GET | Entity detail with recent memories. |
 | \\\`/api/v1/graph\\\` | GET | Graph viewport — nodes + edges for visualization. |
@@ -177,17 +177,15 @@ Agent: "Updated! You now use Neovim."
   "query": "what editor does the user prefer",
   "candidates": [
     {
-      "memory_id": 123,
+      "memory_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       "content": "User prefers dark mode in all editors and uses Neovim as primary editor",
       "memory_type": "viewpoint",
       "score": 0.95,
       "created_at": "2024-03-15T10:30:00Z",
-      "recorded_at": "2024-03-15T10:30:00Z",
-      "event_time": null
+      "event_time": null,
+      "owner_name": null
     }
-  ],
-  "total": 5,
-  "took_ms": 120.5
+  ]
 }
 \\\`\\\`\\\`
 
