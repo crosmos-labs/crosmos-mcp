@@ -72,6 +72,7 @@ export class MemoryClient {
         messages: params.messages.messages,
         session_id: params.messages.session_id ?? null,
         session_date: params.messages.session_date ?? null,
+        visibility: params.messages.visibility ?? "private",
         meta: params.messages.meta ?? null,
       };
       const url = buildUrl(config.api, "conversations");

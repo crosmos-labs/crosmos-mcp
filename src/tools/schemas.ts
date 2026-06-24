@@ -18,7 +18,13 @@ export const addMemoryInputFields = {
           .default("text")
           .describe("Content type: text, markdown, etc."),
         role: z.string().optional().nullable().describe("Speaker role (for conversation content)"),
-        sequence: z.number().int().min(0).optional().default(0).describe("Order within batch"),
+        visibility: z
+          .enum(["private", "org"])
+          .optional()
+          .default("private")
+          .describe(
+            "Read scope: 'private' (gated by the visibility graph) or 'org' (readable by everyone in the org)"
+          ),
         meta: z.record(z.unknown()).optional().nullable().describe("Arbitrary metadata"),
       })
     )
@@ -42,6 +48,13 @@ export const addMemoryInputFields = {
         .optional()
         .nullable()
         .describe("ISO datetime for the conversation reference time"),
+      visibility: z
+        .enum(["private", "org"])
+        .optional()
+        .default("private")
+        .describe(
+          "Read scope: 'private' (gated by the visibility graph) or 'org' (readable by everyone in the org)"
+        ),
       segment_size: z
         .number()
         .int()
@@ -135,10 +148,12 @@ export const addMemoryToolDefinition: Tool = {
               type: "string",
               description: "Speaker role (for conversation content)",
             },
-            sequence: {
-              type: "integer",
-              description: "Order within batch",
-              default: 0,
+            visibility: {
+              type: "string",
+              enum: ["private", "org"],
+              description:
+                "Read scope: 'private' (gated by the visibility graph) or 'org' (readable by everyone in the org)",
+              default: "private",
             },
             meta: {
               type: "object",
@@ -181,6 +196,13 @@ export const addMemoryToolDefinition: Tool = {
           session_date: {
             type: "string",
             description: "ISO datetime for the conversation reference time",
+          },
+          visibility: {
+            type: "string",
+            enum: ["private", "org"],
+            description:
+              "Read scope: 'private' (gated by the visibility graph) or 'org' (readable by everyone in the org)",
+            default: "private",
           },
           segment_size: {
             type: "integer",

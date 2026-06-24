@@ -69,7 +69,8 @@ export function formatSearchResult(response: SearchResponse): string {
 
   const results = response.candidates.map((candidate, index) => {
     const eventTime = candidate.event_time ? ` (event: ${candidate.event_time})` : "";
-    return `${index + 1}. (score: ${candidate.score.toFixed(3)}, type: ${candidate.memory_type})${eventTime}\n   ${candidate.content}`;
+    const owner = candidate.owner_name ? ` (owner: ${candidate.owner_name})` : "";
+    return `${index + 1}. (score: ${candidate.score.toFixed(3)}, type: ${candidate.memory_type})${eventTime}${owner}\n   ${candidate.content}`;
   });
 
   return `Found ${response.candidates.length} memories for "${response.query}":\n\n${results.join("\n\n")}`;

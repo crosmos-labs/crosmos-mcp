@@ -1,10 +1,14 @@
 import { z } from "zod";
 
+// Read scope for ingested content. 'private' is gated by the visibility graph;
+// 'org' is readable by everyone in the org.
+export const VisibilitySchema = z.enum(["private", "org"]);
+
 export const SourcePayloadSchema = z.object({
   content: z.string().min(1, "Content cannot be empty"),
   content_type: z.string().default("text"),
   role: z.string().optional().nullable(),
-  sequence: z.number().int().min(0).default(0),
+  visibility: VisibilitySchema.default("private"),
   meta: z.record(z.unknown()).optional().nullable(),
 });
 
@@ -20,14 +24,13 @@ export const MessagesPayloadSchema = z.object({
     .max(500, "Too many messages"),
   session_id: z.string().optional().nullable(),
   session_date: z.string().optional().nullable(),
+  visibility: VisibilitySchema.default("private"),
   meta: z.record(z.unknown()).optional().nullable(),
 });
 
 export const IngestSourcesRequestSchema = z.object({
   space_id: z.string().uuid("Space ID must be a UUID"),
-  sources: z
-    .array(SourcePayloadSchema)
-    .min(1, "At least one source is required"),
+  sources: z.array(SourcePayloadSchema).min(1, "At least one source is required"),
 });
 
 export const IngestConversationRequestSchema = MessagesPayloadSchema.extend({
@@ -57,10 +60,14 @@ export const AddMemoryRequestSchema = z
     }
   });
 
+// The sources endpoint returns `source_ids` (a batch); the conversations
+// endpoint returns a single `source_id`. Accept either so one response type
+// covers both ingest paths.
 export const AddMemoryResponseSchema = z.object({
   job_id: z.string().uuid(),
   status: z.string(),
-  source_ids: z.array(z.string().uuid()),
+  source_ids: z.array(z.string().uuid()).optional(),
+  source_id: z.string().uuid().optional(),
 });
 
 export type SourcePayload = z.infer<typeof SourcePayloadSchema>;
