@@ -254,7 +254,14 @@ Content → Segment (conversations) → Extract memories/entities/relations (LLM
 6. **Soft-delete memories** via DELETE — they get \\\`forgotten_at\\\` set, excluded from retrieval but preserved in the graph
 `;
 
-export type ClientId = "opencode" | "cursor" | "claude-code" | "windsurf" | "vscode" | "kimi-cli";
+export type ClientId =
+  | "opencode"
+  | "cursor"
+  | "claude-code"
+  | "codex"
+  | "windsurf"
+  | "vscode"
+  | "kimi-cli";
 
 interface ClientConfig {
   name: string;
@@ -274,6 +281,11 @@ const CLIENT_CONFIGS: Record<ClientId, ClientConfig> = {
     name: "Claude Code",
     skillDir: join(HOME, ".claude", "skills", "crosmos"),
     detectPaths: [join(HOME, ".claude")],
+  },
+  codex: {
+    name: "Codex",
+    skillDir: join(HOME, ".agents", "skills", "crosmos"),
+    detectPaths: [join(HOME, ".codex")],
   },
   cursor: {
     name: "Cursor",
@@ -306,6 +318,7 @@ const CLIENT_CONFIGS: Record<ClientId, ClientConfig> = {
 const CLIENT_ORDER: ClientId[] = [
   "opencode",
   "claude-code",
+  "codex",
   "cursor",
   "windsurf",
   "vscode",

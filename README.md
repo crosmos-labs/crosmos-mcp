@@ -22,7 +22,7 @@ npx @crosmos/crosmos-mcp setup
 This runs the interactive setup:
 
 1. **Authenticate** — Enter your API key (get one at [console.crosmos.dev](https://console.crosmos.dev/))
-2. **Install to clients** — Auto-detects installed MCP clients (Claude Desktop, Claude Code, opencode, Cursor, VS Code, Windsurf, Cline, Roo-Cline, Zed, Kimi CLI) and writes the server config
+2. **Install to clients** — Auto-detects installed MCP clients (Claude Desktop, Claude Code, Codex, opencode, Cursor, VS Code, Windsurf, Cline, Roo-Cline, Zed, Kimi CLI) and writes the server config
 3. **Install skill** — Auto-detects your AI editor(s) and installs the Crosmos skill
 
 No global install needed — `npx` handles everything. Clients are configured to run `npx -y @crosmos/crosmos-mcp` so they always pick up the latest version.
@@ -69,6 +69,15 @@ Config location:
 
 ```bash
 claude mcp add crosmos-memory -- npx -y @crosmos/crosmos-mcp
+```
+
+</details>
+
+<details>
+<summary>Codex</summary>
+
+```bash
+codex mcp add crosmos-memory -- npx -y @crosmos/crosmos-mcp
 ```
 
 </details>
@@ -171,7 +180,7 @@ The server uses stdio transport. Point your client to `npx -y @crosmos/crosmos-m
 ### 3. (Optional) Install the skill
 
 ```bash
-npx @crosmos/crosmos-mcp skill install opencode    # or: cursor, claude-code, windsurf, vscode, kimi-cli
+npx @crosmos/crosmos-mcp skill install codex    # or: opencode, cursor, claude-code, windsurf, vscode, kimi-cli
 ```
 
 ## CLI Reference

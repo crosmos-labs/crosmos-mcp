@@ -13,6 +13,7 @@ const SERVER_ARGS = ["-y", "@crosmos/crosmos-mcp"];
 export type ClientId =
   | "claude-desktop"
   | "claude-code"
+  | "codex"
   | "opencode"
   | "cursor"
   | "vscode"
@@ -63,6 +64,14 @@ function buildClients(): ClientDef[] {
       section: "",
       configPath: "",
       detectPaths: [join(HOME, ".claude")],
+      isCli: true,
+    },
+    {
+      id: "codex",
+      name: "Codex",
+      section: "",
+      configPath: "",
+      detectPaths: [join(HOME, ".codex")],
       isCli: true,
     },
     {
@@ -194,6 +203,7 @@ function buildClients(): ClientDef[] {
 const CLIENT_ORDER: ClientId[] = [
   "claude-desktop",
   "claude-code",
+  "codex",
   "opencode",
   "cursor",
   "vscode",
@@ -282,6 +292,13 @@ function installToClient(clientId: ClientId): "installed" | "already_exists" | "
       return runCliInstall(
         `claude mcp add ${SERVER_NAME} -- ${SERVER_CMD} ${SERVER_ARGS.join(" ")}`,
         "claude mcp list"
+      );
+    }
+
+    if (client.id === "codex") {
+      return runCliInstall(
+        `codex mcp add ${SERVER_NAME} -- ${SERVER_CMD} ${SERVER_ARGS.join(" ")}`,
+        "codex mcp list"
       );
     }
 
