@@ -1,6 +1,10 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { memoryClient } from "../client/index.js";
-import { AddMemoryRequestSchema, type AddMemoryResponse } from "../schemas/memory.js";
+import {
+  AddMemoryRequestSchema,
+  type AddMemoryResponse,
+  AddMemoryResponseSchema,
+} from "../schemas/memory.js";
 
 export const addMemoryToolDefinition: Tool = {
   name: "add_memory",
@@ -161,9 +165,25 @@ export async function handleAddMemory(
   }
 
   const result = await memoryClient.addMemory(parsed.data, authToken);
-  return result;
+  const parsedResponse = AddMemoryResponseSchema.safeParse(result);
+  if (!parsedResponse.success) {
+    throw new Error(`Invalid response from API: ${parsedResponse.error.message}`);
+  }
+
+  return parsedResponse.data;
 }
 
-export function formatAddMemoryResult(): string {
-  return "Memory saved successfully.";
+export function formatAddMemoryResult(response: AddMemoryResponse): string {
+  const sourceIds = response.source_ids ?? (response.source_id ? [response.source_id] : []);
+  const lines = [
+    "Memory ingestion accepted for asynchronous processing.",
+    `Status: ${response.status}`,
+    `Job ID: ${response.job_id}`,
+  ];
+
+  if (sourceIds.length > 0) {
+    lines.push(`Source ID${sourceIds.length === 1 ? "" : "s"}: ${sourceIds.join(", ")}`);
+  }
+
+  return lines.join("\n");
 }

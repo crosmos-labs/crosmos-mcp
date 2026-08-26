@@ -73,7 +73,7 @@ export function createServer(): McpServer {
     async (input, extra) => {
       const authToken = extra.authInfo?.token;
       try {
-        await handleAddMemory(
+        const result = await handleAddMemory(
           {
             space_id: input.space_id,
             sources: input.sources?.map((s) => ({
@@ -98,7 +98,7 @@ export function createServer(): McpServer {
           authToken
         );
         return {
-          content: [{ type: "text", text: formatAddMemoryResult() }],
+          content: [{ type: "text", text: formatAddMemoryResult(result) }],
         };
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown error";
