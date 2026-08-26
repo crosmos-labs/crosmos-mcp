@@ -3,6 +3,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import {
   handleAuthCommand,
   handleSetupCommand,
+  handleSpacesCommand,
   parseArgs,
   printHelp,
   printVersion,
@@ -30,6 +31,11 @@ async function main(): Promise<void> {
 
   if (command === "setup") {
     const completed = await handleSetupCommand(args);
+    process.exit(completed ? 0 : 1);
+  }
+
+  if (command === "spaces") {
+    const completed = await handleSpacesCommand(subcommand ?? "list", args);
     process.exit(completed ? 0 : 1);
   }
 

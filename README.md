@@ -22,8 +22,9 @@ npx @crosmos/crosmos-mcp setup
 This runs the interactive setup:
 
 1. **Authenticate** — Enter your API key (get one at [console.crosmos.dev](https://console.crosmos.dev/))
-2. **Install to clients** — Auto-detects installed MCP clients (Claude Desktop, Claude Code, Codex, opencode, Cursor, VS Code, Windsurf, Cline, Roo-Cline, Zed, Kimi CLI) and writes the server config
-3. **Install skill** — Auto-detects your AI editor(s) and installs the Crosmos skill
+2. **Choose a default space** — Selects from the spaces available to your account
+3. **Install to clients** — Auto-detects installed MCP clients (Claude Desktop, Claude Code, Codex, opencode, Cursor, VS Code, Windsurf, Cline, Roo-Cline, Zed, Kimi CLI) and writes the server config
+4. **Install skill** — Auto-detects your AI editor(s) and installs the Crosmos skill
 
 No global install needed — `npx` handles everything. Clients are configured to run `npx -y @crosmos/crosmos-mcp` so they always pick up the latest version.
 
@@ -192,6 +193,9 @@ npx @crosmos/crosmos-mcp auth login          # Authenticate with API key
 npx @crosmos/crosmos-mcp auth login --base-url URL # Custom API base URL
 npx @crosmos/crosmos-mcp auth logout         # Remove stored credentials
 npx @crosmos/crosmos-mcp auth status         # Show auth state
+npx @crosmos/crosmos-mcp spaces list         # List spaces (* marks the default)
+npx @crosmos/crosmos-mcp spaces current      # Show the current default space
+npx @crosmos/crosmos-mcp spaces use <name-or-id> # Change the default space
 npx @crosmos/crosmos-mcp skill install <client>  # Install Crosmos skill
 ```
 
@@ -206,6 +210,10 @@ npx @crosmos/crosmos-mcp skill install <client>  # Install Crosmos skill
 | `DEFAULT_SPACE_NAME` | Default memory space name (resolved via `/spaces?name=`); ignored if `DEFAULT_SPACE_ID` is set | — |
 
 Credential resolution order: `CROSMOS_API_KEY` env var → `~/.crosmos/credentials.json` → error.
+
+Space resolution order: explicit tool-call `space_id` → `DEFAULT_SPACE_ID` →
+`DEFAULT_SPACE_NAME` → the default saved by `spaces use` in `~/.crosmos/config.json` → the first
+available space. Environment variables override the CLI-saved default.
 
 ## Development
 

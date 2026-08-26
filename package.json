@@ -9,13 +9,7 @@
     "type": "git",
     "url": "git+https://github.com/crosmos-org/crosmos-mcp.git"
   },
-  "keywords": [
-    "mcp",
-    "memory",
-    "ai",
-    "rag",
-    "knowledge-graph"
-  ],
+  "keywords": ["mcp", "memory", "ai", "rag", "knowledge-graph"],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
@@ -32,10 +26,7 @@
       "default": "./dist/server.js"
     }
   },
-  "files": [
-    "dist",
-    "README.md"
-  ],
+  "files": ["dist", "README.md"],
   "scripts": {
     "build": "tsc",
     "build:docker": "bun build ./src/stdio.ts ./src/http.ts ./src/server.ts --outdir ./dist --target node --splitting",
@@ -47,6 +38,7 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
+    "test": "npm run build && node --test test/*.test.mjs",
     "typecheck": "tsc --noEmit",
     "typecheck:all": "tsc --noEmit -p tsconfig.docker.json",
     "prepublishOnly": "npm run build"

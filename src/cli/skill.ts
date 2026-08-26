@@ -44,7 +44,6 @@ Store information into the knowledge graph. The LLM extraction pipeline handles 
 
 \\\`\\\`\\\`json
 {
-  "space_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "sources": [
     {"content": "User prefers dark mode and uses Neovim as their primary editor"}
   ]
@@ -55,7 +54,6 @@ For multi-turn conversations, use the messages format:
 
 \\\`\\\`\\\`json
 {
-  "space_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "messages": {
     "messages": [
       {"role": "user", "content": "I just got back from Tokyo"},
@@ -75,8 +73,7 @@ Retrieve relevant memories using hybrid search (semantic + keyword + graph).
 
 \\\`\\\`\\\`json
 {
-  "query": "What editor does the user prefer?",
-  "space_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+  "query": "What editor does the user prefer?"
 }
 \\\`\\\`\\\`
 
@@ -86,6 +83,10 @@ and graph retrieval are controlled by the server.
 ### \\\`crosmos_list_spaces\\\`
 
 List all memory spaces the user has access to.
+
+The CLI-saved default space is used automatically. Only list spaces when the user explicitly asks
+to view or switch spaces, then pass \`space_id\` to override the default for that tool call. Users can
+change their persistent default with \`crosmos-mcp spaces use <name-or-id>\`.
 
 \\\`\\\`\\\`json
 {}
