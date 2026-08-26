@@ -5,6 +5,8 @@ import { authLogin, authLogout, authStatus } from "./auth.js";
 import * as p from "./clack.js";
 import { promptClientInstall } from "./client-install.js";
 import { promptSkillInstall } from "./skill.js";
+import { promptDefaultSpace } from "./spaces.js";
+export { handleSpacesCommand } from "./spaces.js";
 
 function getVersion(): string {
   try {
@@ -27,6 +29,9 @@ Usage:
   crosmos-mcp auth login --base-url URL  Use a custom API base URL
   crosmos-mcp auth logout                Remove stored credentials
   crosmos-mcp auth status                Show current auth state
+  crosmos-mcp spaces list                List available spaces
+  crosmos-mcp spaces current             Show the current default space
+  crosmos-mcp spaces use <name-or-id>    Change the default space
   crosmos-mcp skill install <client>     Install the Crosmos skill
 
 Options:
@@ -69,7 +74,7 @@ export async function handleAuthCommand(subcommand: string, args: string[]): Pro
   }
 }
 
-export async function handleSetupCommand(args: string[]): Promise<void> {
+export async function handleSetupCommand(args: string[]): Promise<boolean> {
   const baseUrl = parseBaseUrlFlag(args);
   const envKey = process.env.CROSMOS_API_KEY;
   const { readCredentials } = await import("./credentials.js");
@@ -81,10 +86,16 @@ export async function handleSetupCommand(args: string[]): Promise<void> {
 
   if (needsAuth) {
     p.log.info("Get an API key at https://console.crosmos.dev/");
-    await authLogin(baseUrl);
+    const authenticated = await authLogin(baseUrl);
+    if (!authenticated) {
+      p.outro("Setup stopped. Authenticate to continue.");
+      return false;
+    }
   } else {
     p.log.success("Already authenticated");
   }
+
+  await promptDefaultSpace();
 
   await promptClientInstall();
 
@@ -110,6 +121,7 @@ export async function handleSetupCommand(args: string[]): Promise<void> {
     "Have a w day :)",
   ];
   p.outro(outros[Math.floor(Math.random() * outros.length)]);
+  return true;
 }
 
 function parseBaseUrlFlag(args: string[]): string | undefined {
@@ -122,7 +134,7 @@ function parseBaseUrlFlag(args: string[]): string | undefined {
 }
 
 export function parseArgs(argv: string[]): {
-  command: "server" | "auth" | "setup" | "skill" | "help" | "version";
+  command: "server" | "auth" | "spaces" | "setup" | "skill" | "help" | "version";
   subcommand?: string;
   args: string[];
 } {
@@ -149,6 +161,10 @@ export function parseArgs(argv: string[]): {
 
   if (first === "setup") {
     return { command: "setup", args: args.slice(1) };
+  }
+
+  if (first === "spaces") {
+    return { command: "spaces", subcommand: args[1] ?? "list", args: args.slice(2) };
   }
 
   if (first === "skill") {

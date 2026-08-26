@@ -4,13 +4,13 @@ import { join } from "node:path";
 import * as p from "./clack.js";
 
 const SKILL_CONTENT = `---
-name: crosmos-memory
-description: Crosmos Memory is a Monotonic Temporal Knowledge Graph (MTKG) for AI agents. Use this skill when building applications that need persistent memory with full temporal history, entity-relationship tracking, or hybrid retrieval (semantic + keyword + graph). Perfect for agents that need to understand relationships between entities, track knowledge evolution over time, and retrieve context with deterministic intent classification.
+name: crosmos
+description: crosmos is a Monotonic Temporal Knowledge Graph (MTKG) for AI agents. Use this skill when building applications that need persistent memory with full temporal history, entity-relationship tracking, or hybrid retrieval (semantic + keyword + graph). Perfect for agents that need to understand relationships between entities, track knowledge evolution over time, and retrieve context with deterministic intent classification.
 ---
 
-# Crosmos Memory — Agent Integration Guide
+# crosmos — Agent Integration Guide
 
-An agent using Crosmos should **automatically** decide whether to store or retrieve based on user intent. The user should never have to explicitly say "remember this" or "search for X".
+An agent using crosmos should **automatically** decide whether to store or retrieve based on user intent. The user should never have to explicitly say "remember this" or "search for X".
 
 ## Auto-Intent Rules
 
@@ -44,7 +44,6 @@ Store information into the knowledge graph. The LLM extraction pipeline handles 
 
 \\\`\\\`\\\`json
 {
-  "space_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "sources": [
     {"content": "User prefers dark mode and uses Neovim as their primary editor"}
   ]
@@ -55,13 +54,14 @@ For multi-turn conversations, use the messages format:
 
 \\\`\\\`\\\`json
 {
-  "space_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "messages": [
-    {"role": "user", "content": "I just got back from Tokyo"},
-    {"role": "assistant", "content": "How was it?"},
-    {"role": "user", "content": "Amazing, I visited Shibuya and ate at Ichiran ramen"}
-  ],
-  "session_id": "tokyo-trip-2024"
+  "messages": {
+    "messages": [
+      {"role": "user", "content": "I just got back from Tokyo"},
+      {"role": "assistant", "content": "How was it?"},
+      {"role": "user", "content": "Amazing, I visited Shibuya and ate at Ichiran ramen"}
+    ],
+    "session_id": "tokyo-trip-2024"
+  }
 }
 \\\`\\\`\\\`
 
@@ -73,19 +73,20 @@ Retrieve relevant memories using hybrid search (semantic + keyword + graph).
 
 \\\`\\\`\\\`json
 {
-  "query": "What editor does the user prefer?",
-  "space_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+  "query": "What editor does the user prefer?"
 }
 \\\`\\\`\\\`
 
-Optional parameters:
-- \\\`limit\\\` (1-50, default 10): Number of results
-- \\\`rerank\\\` (boolean, default true): Cross-encoder reranking for precision
-- \\\`graph\\\` (boolean, default true): Include graph traversal signal (disable for faster keyword+semantic only)
+The MCP tool accepts only \\\`query\\\` and optional \\\`space_id\\\`. Result sizing, reranking,
+and graph retrieval are controlled by the server.
 
 ### \\\`crosmos_list_spaces\\\`
 
 List all memory spaces the user has access to.
+
+The CLI-saved default space is used automatically. Only list spaces when the user explicitly asks
+to view or switch spaces, then pass \`space_id\` to override the default for that tool call. Users can
+change their persistent default with \`crosmos-mcp spaces use <name-or-id>\`.
 
 \\\`\\\`\\\`json
 {}
@@ -179,8 +180,6 @@ Agent: "Updated! You now use Neovim."
     {
       "memory_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       "content": "User prefers dark mode in all editors and uses Neovim as primary editor",
-      "memory_type": "viewpoint",
-      "score": 0.95,
       "created_at": "2024-03-15T10:30:00Z",
       "event_time": null,
       "owner_name": null
@@ -250,11 +249,17 @@ Content → Segment (conversations) → Extract memories/entities/relations (LLM
 2. **Use conversations endpoint** for multi-turn chats — it handles segmentation and lookback automatically
 3. **Include session_date** for temporal reasoning — the system extracts relative dates to absolute timestamps
 4. **Poll job status after ingestion** — extraction is async, wait for \\\`status: "completed"\\\` before searching
-5. **Set \\\`graph: false\\\`** on search if you only need keyword+semantic for faster results
-6. **Soft-delete memories** via DELETE — they get \\\`forgotten_at\\\` set, excluded from retrieval but preserved in the graph
-`;
+5. **Soft-delete memories** via DELETE — they get \\\`forgotten_at\\\` set, excluded from retrieval but preserved in the graph
+`.replaceAll("\\`", "`");
 
-export type ClientId = "opencode" | "cursor" | "claude-code" | "windsurf" | "vscode" | "kimi-cli";
+export type ClientId =
+  | "opencode"
+  | "cursor"
+  | "claude-code"
+  | "codex"
+  | "windsurf"
+  | "vscode"
+  | "kimi-cli";
 
 interface ClientConfig {
   name: string;
@@ -274,6 +279,11 @@ const CLIENT_CONFIGS: Record<ClientId, ClientConfig> = {
     name: "Claude Code",
     skillDir: join(HOME, ".claude", "skills", "crosmos"),
     detectPaths: [join(HOME, ".claude")],
+  },
+  codex: {
+    name: "Codex",
+    skillDir: join(HOME, ".agents", "skills", "crosmos"),
+    detectPaths: [join(HOME, ".codex")],
   },
   cursor: {
     name: "Cursor",
@@ -306,6 +316,7 @@ const CLIENT_CONFIGS: Record<ClientId, ClientConfig> = {
 const CLIENT_ORDER: ClientId[] = [
   "opencode",
   "claude-code",
+  "codex",
   "cursor",
   "windsurf",
   "vscode",
@@ -359,7 +370,7 @@ export async function promptSkillInstall(): Promise<void> {
   const detected = detectInstalledClients();
 
   const selectedClients = await p.multiselect({
-    message: "Install Crosmos skill for (Ctrl+C to skip):",
+    message: "Install crosmos skill for (Ctrl+C to skip):",
     options: CLIENT_ORDER.map((id) => {
       const config = CLIENT_CONFIGS[id];
       const isDetected = detected.includes(id);

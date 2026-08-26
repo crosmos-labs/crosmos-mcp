@@ -13,15 +13,16 @@ import {
 } from "./tools/index.js";
 
 const SERVER_INSTRUCTIONS = [
-  "Memory operations require a space_id (UUID). If you don't know the user's space IDs yet, call list_spaces to discover them first.",
-  "Cache the space IDs for the session — you don't need to call list_spaces again unless the user asks about their spaces.",
+  "Memory operations use the configured default space when space_id is omitted.",
+  "Only call list_spaces when the user asks to view or switch spaces, or when default-space resolution fails.",
+  "Pass space_id only to override the configured default for a specific operation.",
   "If list_spaces returns no spaces, tell the user to create one via the Crosmos dashboard before proceeding.",
 ].join("\n");
 
 export function createServer(): McpServer {
   const server = new McpServer(
     {
-      name: "crosmos-memory",
+      name: "crosmos",
       version: "0.1.0",
     },
     {
@@ -34,7 +35,7 @@ export function createServer(): McpServer {
 
   server.tool(
     "search_memories",
-    "Search memories in Crosmos Memory Engine using hybrid retrieval. Combines semantic (vector), keyword (full-text), and graph-based retrieval. Requires a space_id — call list_spaces if you don't have one yet.",
+    "Search memories in Crosmos Memory Engine using hybrid retrieval. Combines semantic (vector), keyword (full-text), and graph-based retrieval. Uses the configured default space when space_id is omitted.",
     {
       query: searchInputSchema.shape.query,
       space_id: searchInputSchema.shape.space_id,
@@ -64,7 +65,7 @@ export function createServer(): McpServer {
 
   server.tool(
     "add_memory",
-    "Add new memories to Crosmos Memory Engine. Content is processed through an extraction pipeline that identifies entities, relationships, and creates structured knowledge graph entries. Requires a space_id — call list_spaces if you don't have one yet.",
+    "Add new memories to Crosmos Memory Engine. Content is processed through an extraction pipeline that identifies entities, relationships, and creates structured knowledge graph entries. Uses the configured default space when space_id is omitted.",
     {
       space_id: addMemoryInputFields.space_id,
       sources: addMemoryInputFields.sources,
@@ -73,7 +74,7 @@ export function createServer(): McpServer {
     async (input, extra) => {
       const authToken = extra.authInfo?.token;
       try {
-        await handleAddMemory(
+        const result = await handleAddMemory(
           {
             space_id: input.space_id,
             sources: input.sources?.map((s) => ({
@@ -98,7 +99,7 @@ export function createServer(): McpServer {
           authToken
         );
         return {
-          content: [{ type: "text", text: formatAddMemoryResult() }],
+          content: [{ type: "text", text: formatAddMemoryResult(result) }],
         };
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown error";
@@ -133,7 +134,7 @@ export function createServer(): McpServer {
 
   server.tool(
     "list_spaces",
-    "List all memory spaces owned by the authenticated user. Call this to discover available space IDs needed by search_memories and add_memory.",
+    "List all memory spaces owned by the authenticated user. Use this when the user asks to view or switch spaces.",
     {},
     async (_input, extra) => {
       const authToken = extra.authInfo?.token;

@@ -22,8 +22,9 @@ npx @crosmos/crosmos-mcp setup
 This runs the interactive setup:
 
 1. **Authenticate** — Enter your API key (get one at [console.crosmos.dev](https://console.crosmos.dev/))
-2. **Install to clients** — Auto-detects installed MCP clients (Claude Desktop, Claude Code, opencode, Cursor, VS Code, Windsurf, Cline, Roo-Cline, Zed, Kimi CLI) and writes the server config
-3. **Install skill** — Auto-detects your AI editor(s) and installs the Crosmos skill
+2. **Choose a default space** — Selects from the spaces available to your account
+3. **Install to clients** — Auto-detects installed MCP clients (Claude Desktop, Claude Code, Codex, opencode, Cursor, VS Code, Windsurf, Cline, Roo-Cline, Zed, Kimi CLI) and writes the server config
+4. **Install skill** — Auto-detects your AI editor(s) and installs the Crosmos skill
 
 No global install needed — `npx` handles everything. Clients are configured to run `npx -y @crosmos/crosmos-mcp` so they always pick up the latest version.
 
@@ -54,7 +55,7 @@ Config location:
 ```json
 {
   "mcpServers": {
-    "crosmos-memory": {
+    "crosmos": {
       "command": "npx",
       "args": ["-y", "@crosmos/crosmos-mcp"]
     }
@@ -68,7 +69,16 @@ Config location:
 <summary>Claude Code</summary>
 
 ```bash
-claude mcp add crosmos-memory -- npx -y @crosmos/crosmos-mcp
+claude mcp add crosmos -- npx -y @crosmos/crosmos-mcp
+```
+
+</details>
+
+<details>
+<summary>Codex</summary>
+
+```bash
+codex mcp add crosmos -- npx -y @crosmos/crosmos-mcp
 ```
 
 </details>
@@ -81,7 +91,7 @@ claude mcp add crosmos-memory -- npx -y @crosmos/crosmos-mcp
 ```json
 {
   "mcp": {
-    "crosmos-memory": {
+    "crosmos": {
       "type": "local",
       "command": ["npx", "-y", "@crosmos/crosmos-mcp"]
     }
@@ -99,7 +109,7 @@ claude mcp add crosmos-memory -- npx -y @crosmos/crosmos-mcp
 ```json
 {
   "mcpServers": {
-    "crosmos-memory": {
+    "crosmos": {
       "command": "npx",
       "args": ["-y", "@crosmos/crosmos-mcp"]
     }
@@ -119,7 +129,7 @@ claude mcp add crosmos-memory -- npx -y @crosmos/crosmos-mcp
 ```json
 {
   "servers": {
-    "crosmos-memory": {
+    "crosmos": {
       "command": "npx",
       "args": ["-y", "@crosmos/crosmos-mcp"]
     }
@@ -137,7 +147,7 @@ claude mcp add crosmos-memory -- npx -y @crosmos/crosmos-mcp
 ```json
 {
   "mcpServers": {
-    "crosmos-memory": {
+    "crosmos": {
       "command": "npx",
       "args": ["-y", "@crosmos/crosmos-mcp"]
     }
@@ -151,7 +161,7 @@ claude mcp add crosmos-memory -- npx -y @crosmos/crosmos-mcp
 <summary>Kimi CLI</summary>
 
 ```bash
-kimi mcp add --transport stdio crosmos-memory -- npx -y @crosmos/crosmos-mcp
+kimi mcp add --transport stdio crosmos -- npx -y @crosmos/crosmos-mcp
 ```
 
 </details>
@@ -171,7 +181,7 @@ The server uses stdio transport. Point your client to `npx -y @crosmos/crosmos-m
 ### 3. (Optional) Install the skill
 
 ```bash
-npx @crosmos/crosmos-mcp skill install opencode    # or: cursor, claude-code, windsurf, vscode, kimi-cli
+npx @crosmos/crosmos-mcp skill install codex    # or: opencode, cursor, claude-code, windsurf, vscode, kimi-cli
 ```
 
 ## CLI Reference
@@ -183,6 +193,9 @@ npx @crosmos/crosmos-mcp auth login          # Authenticate with API key
 npx @crosmos/crosmos-mcp auth login --base-url URL # Custom API base URL
 npx @crosmos/crosmos-mcp auth logout         # Remove stored credentials
 npx @crosmos/crosmos-mcp auth status         # Show auth state
+npx @crosmos/crosmos-mcp spaces list         # List spaces (* marks the default)
+npx @crosmos/crosmos-mcp spaces current      # Show the current default space
+npx @crosmos/crosmos-mcp spaces use <name-or-id> # Change the default space
 npx @crosmos/crosmos-mcp skill install <client>  # Install Crosmos skill
 ```
 
@@ -198,6 +211,10 @@ npx @crosmos/crosmos-mcp skill install <client>  # Install Crosmos skill
 
 Credential resolution order: `CROSMOS_API_KEY` env var → `~/.crosmos/credentials.json` → error.
 
+Space resolution order: explicit tool-call `space_id` → `DEFAULT_SPACE_ID` →
+`DEFAULT_SPACE_NAME` → the default saved by `spaces use` in `~/.crosmos/config.json` → the first
+available space. Environment variables override the CLI-saved default.
+
 ## Development
 
 ```bash
@@ -207,6 +224,20 @@ npm run build        # compile TypeScript
 npm run lint         # biome check
 npm run format       # biome format
 ```
+
+### Test locally with Codex
+
+From the repository root:
+
+```bash
+npm run build
+codex mcp add crosmos -- node "$PWD/dist/stdio.js"
+codex mcp list
+```
+
+If an older `crosmos-memory` registration exists, remove it with
+`codex mcp remove crosmos-memory`. Restart Codex after changing MCP configuration, then confirm
+that the server appears as `crosmos` and exposes its memory tools.
 
 ## License
 

@@ -6,13 +6,14 @@ import * as p from "./clack.js";
 
 const HOME = homedir();
 const PLATFORM = process.platform;
-const SERVER_NAME = "crosmos-memory";
+const SERVER_NAME = "crosmos";
 const SERVER_CMD = "npx";
 const SERVER_ARGS = ["-y", "@crosmos/crosmos-mcp"];
 
 export type ClientId =
   | "claude-desktop"
   | "claude-code"
+  | "codex"
   | "opencode"
   | "cursor"
   | "vscode"
@@ -63,6 +64,14 @@ function buildClients(): ClientDef[] {
       section: "",
       configPath: "",
       detectPaths: [join(HOME, ".claude")],
+      isCli: true,
+    },
+    {
+      id: "codex",
+      name: "Codex",
+      section: "",
+      configPath: "",
+      detectPaths: [join(HOME, ".codex")],
       isCli: true,
     },
     {
@@ -194,6 +203,7 @@ function buildClients(): ClientDef[] {
 const CLIENT_ORDER: ClientId[] = [
   "claude-desktop",
   "claude-code",
+  "codex",
   "opencode",
   "cursor",
   "vscode",
@@ -229,7 +239,7 @@ function mergeJsonConfig(
     try {
       config = JSON.parse(readFileSync(filePath, "utf-8"));
     } catch {
-      config = {};
+      return "error";
     }
   }
 
@@ -265,7 +275,10 @@ function runCliInstall(addCmd: string, listCmd: string): "installed" | "already_
         stdio: "pipe",
         encoding: "utf-8",
       });
-      if (list.includes(SERVER_NAME)) return "already_exists";
+      const isConfigured = list
+        .split(/\r?\n/)
+        .some((line) => line.trim().split(/\s+/)[0] === SERVER_NAME);
+      if (isConfigured) return "already_exists";
     } catch {
       // ignore — will return error below
     }
@@ -282,6 +295,13 @@ function installToClient(clientId: ClientId): "installed" | "already_exists" | "
       return runCliInstall(
         `claude mcp add ${SERVER_NAME} -- ${SERVER_CMD} ${SERVER_ARGS.join(" ")}`,
         "claude mcp list"
+      );
+    }
+
+    if (client.id === "codex") {
+      return runCliInstall(
+        `codex mcp add ${SERVER_NAME} -- ${SERVER_CMD} ${SERVER_ARGS.join(" ")}`,
+        "codex mcp list"
       );
     }
 

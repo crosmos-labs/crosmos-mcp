@@ -1,3 +1,4 @@
+import { readSavedDefaultSpace } from "../cli/config.js";
 import { buildUrl, config } from "../config/index.js";
 import type {
   AddMemoryRequest,
@@ -145,6 +146,11 @@ export class MemoryClient {
       }
       this.resolvedSpaceIdByName.set(cacheKey, match.id);
       return match.id;
+    }
+
+    const saved = readSavedDefaultSpace();
+    if (saved !== null) {
+      return saved.id;
     }
 
     const spaces = await this.listSpaces(authToken);

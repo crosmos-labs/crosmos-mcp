@@ -36,6 +36,14 @@ export async function multiselect(options: {
   return clack.multiselect(options) as Promise<string[] | symbol>;
 }
 
+export async function select(options: {
+  message: string;
+  options: Array<{ value: string; label: string; hint?: string }>;
+  initialValue?: string;
+}): Promise<string | symbol> {
+  return clack.select(options) as Promise<string | symbol>;
+}
+
 export function spinner(): { start: (msg?: string) => void; stop: (msg?: string) => void } {
   return clack.spinner() as unknown as {
     start: (msg?: string) => void;
