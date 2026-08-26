@@ -26,7 +26,7 @@ async function validateApiKey(apiKey: string, baseUrl: string): Promise<boolean>
   }
 }
 
-export async function authLogin(baseUrlOverride?: string): Promise<void> {
+export async function authLogin(baseUrlOverride?: string): Promise<boolean> {
   const existing = readCredentials();
 
   if (existing) {
@@ -35,9 +35,9 @@ export async function authLogin(baseUrlOverride?: string): Promise<void> {
       message: `Found existing key (${masked}). Replace?`,
       initialValue: false,
     });
-    if (!replace) {
+    if (p.isCancel(replace) || !replace) {
       p.log.info("Login cancelled.");
-      return;
+      return false;
     }
   }
 
@@ -56,7 +56,7 @@ export async function authLogin(baseUrlOverride?: string): Promise<void> {
 
   if (p.isCancel(apiKey) || !apiKey) {
     p.log.info("Skipped. Get a key at https://console.crosmos.dev/");
-    return;
+    return false;
   }
 
   const s = p.spinner();
@@ -68,7 +68,7 @@ export async function authLogin(baseUrlOverride?: string): Promise<void> {
     s.stop("Invalid API key");
     p.log.error("Could not authenticate with the Crosmos API.");
     p.log.info("Check your key at https://console.crosmos.dev/");
-    return;
+    return false;
   }
 
   s.stop("Valid API key");
@@ -79,6 +79,7 @@ export async function authLogin(baseUrlOverride?: string): Promise<void> {
   });
 
   p.log.success("Credentials saved.");
+  return true;
 }
 
 export async function authLogout(): Promise<void> {

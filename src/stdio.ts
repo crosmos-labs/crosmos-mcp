@@ -29,8 +29,8 @@ async function main(): Promise<void> {
   }
 
   if (command === "setup") {
-    await handleSetupCommand(args);
-    process.exit(0);
+    const completed = await handleSetupCommand(args);
+    process.exit(completed ? 0 : 1);
   }
 
   if (command === "skill") {

@@ -69,7 +69,7 @@ export async function handleAuthCommand(subcommand: string, args: string[]): Pro
   }
 }
 
-export async function handleSetupCommand(args: string[]): Promise<void> {
+export async function handleSetupCommand(args: string[]): Promise<boolean> {
   const baseUrl = parseBaseUrlFlag(args);
   const envKey = process.env.CROSMOS_API_KEY;
   const { readCredentials } = await import("./credentials.js");
@@ -81,7 +81,11 @@ export async function handleSetupCommand(args: string[]): Promise<void> {
 
   if (needsAuth) {
     p.log.info("Get an API key at https://console.crosmos.dev/");
-    await authLogin(baseUrl);
+    const authenticated = await authLogin(baseUrl);
+    if (!authenticated) {
+      p.outro("Setup stopped. Authenticate to continue.");
+      return false;
+    }
   } else {
     p.log.success("Already authenticated");
   }
@@ -110,6 +114,7 @@ export async function handleSetupCommand(args: string[]): Promise<void> {
     "Have a w day :)",
   ];
   p.outro(outros[Math.floor(Math.random() * outros.length)]);
+  return true;
 }
 
 function parseBaseUrlFlag(args: string[]): string | undefined {
