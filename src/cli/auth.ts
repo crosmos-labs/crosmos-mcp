@@ -9,14 +9,18 @@ import {
 
 async function validateApiKey(apiKey: string, baseUrl: string): Promise<boolean> {
   try {
-    const url = `${baseUrl}/health`;
+    const url = `${baseUrl}/api/v1/auth/keys/validate`;
     const response = await fetch(url, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${apiKey}`,
       },
     });
-    return response.ok;
+
+    if (!response.ok) return false;
+
+    const result = (await response.json()) as { valid?: unknown };
+    return result.valid === true;
   } catch {
     return false;
   }

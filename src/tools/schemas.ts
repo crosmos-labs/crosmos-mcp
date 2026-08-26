@@ -55,22 +55,6 @@ export const addMemoryInputFields = {
         .describe(
           "Read scope: 'private' (gated by the visibility graph) or 'org' (readable by everyone in the org)"
         ),
-      segment_size: z
-        .number()
-        .int()
-        .min(1)
-        .max(20)
-        .optional()
-        .default(4)
-        .describe("Messages per segment"),
-      lookback: z
-        .number()
-        .int()
-        .min(0)
-        .max(20)
-        .optional()
-        .default(4)
-        .describe("Number of prior segments included as context"),
     })
     .optional()
     .describe("Conversation messages with automatic segmentation and lookback context"),
@@ -203,20 +187,6 @@ export const addMemoryToolDefinition: Tool = {
             description:
               "Read scope: 'private' (gated by the visibility graph) or 'org' (readable by everyone in the org)",
             default: "private",
-          },
-          segment_size: {
-            type: "integer",
-            description: "Messages per segment",
-            default: 4,
-            minimum: 1,
-            maximum: 20,
-          },
-          lookback: {
-            type: "integer",
-            description: "Number of prior segments included as context",
-            default: 4,
-            minimum: 0,
-            maximum: 20,
           },
         },
         required: ["messages"],
