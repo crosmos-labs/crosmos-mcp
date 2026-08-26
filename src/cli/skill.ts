@@ -180,8 +180,6 @@ Agent: "Updated! You now use Neovim."
     {
       "memory_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       "content": "User prefers dark mode in all editors and uses Neovim as primary editor",
-      "memory_type": "viewpoint",
-      "score": 0.95,
       "created_at": "2024-03-15T10:30:00Z",
       "event_time": null,
       "owner_name": null
