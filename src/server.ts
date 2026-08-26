@@ -21,7 +21,7 @@ const SERVER_INSTRUCTIONS = [
 export function createServer(): McpServer {
   const server = new McpServer(
     {
-      name: "crosmos-memory",
+      name: "crosmos",
       version: "0.1.0",
     },
     {

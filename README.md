@@ -54,7 +54,7 @@ Config location:
 ```json
 {
   "mcpServers": {
-    "crosmos-memory": {
+    "crosmos": {
       "command": "npx",
       "args": ["-y", "@crosmos/crosmos-mcp"]
     }
@@ -68,7 +68,7 @@ Config location:
 <summary>Claude Code</summary>
 
 ```bash
-claude mcp add crosmos-memory -- npx -y @crosmos/crosmos-mcp
+claude mcp add crosmos -- npx -y @crosmos/crosmos-mcp
 ```
 
 </details>
@@ -77,7 +77,7 @@ claude mcp add crosmos-memory -- npx -y @crosmos/crosmos-mcp
 <summary>Codex</summary>
 
 ```bash
-codex mcp add crosmos-memory -- npx -y @crosmos/crosmos-mcp
+codex mcp add crosmos -- npx -y @crosmos/crosmos-mcp
 ```
 
 </details>
@@ -90,7 +90,7 @@ codex mcp add crosmos-memory -- npx -y @crosmos/crosmos-mcp
 ```json
 {
   "mcp": {
-    "crosmos-memory": {
+    "crosmos": {
       "type": "local",
       "command": ["npx", "-y", "@crosmos/crosmos-mcp"]
     }
@@ -108,7 +108,7 @@ codex mcp add crosmos-memory -- npx -y @crosmos/crosmos-mcp
 ```json
 {
   "mcpServers": {
-    "crosmos-memory": {
+    "crosmos": {
       "command": "npx",
       "args": ["-y", "@crosmos/crosmos-mcp"]
     }
@@ -128,7 +128,7 @@ codex mcp add crosmos-memory -- npx -y @crosmos/crosmos-mcp
 ```json
 {
   "servers": {
-    "crosmos-memory": {
+    "crosmos": {
       "command": "npx",
       "args": ["-y", "@crosmos/crosmos-mcp"]
     }
@@ -146,7 +146,7 @@ codex mcp add crosmos-memory -- npx -y @crosmos/crosmos-mcp
 ```json
 {
   "mcpServers": {
-    "crosmos-memory": {
+    "crosmos": {
       "command": "npx",
       "args": ["-y", "@crosmos/crosmos-mcp"]
     }
@@ -160,7 +160,7 @@ codex mcp add crosmos-memory -- npx -y @crosmos/crosmos-mcp
 <summary>Kimi CLI</summary>
 
 ```bash
-kimi mcp add --transport stdio crosmos-memory -- npx -y @crosmos/crosmos-mcp
+kimi mcp add --transport stdio crosmos -- npx -y @crosmos/crosmos-mcp
 ```
 
 </details>
@@ -216,6 +216,20 @@ npm run build        # compile TypeScript
 npm run lint         # biome check
 npm run format       # biome format
 ```
+
+### Test locally with Codex
+
+From the repository root:
+
+```bash
+npm run build
+codex mcp add crosmos -- node "$PWD/dist/stdio.js"
+codex mcp list
+```
+
+If an older `crosmos-memory` registration exists, remove it with
+`codex mcp remove crosmos-memory`. Restart Codex after changing MCP configuration, then confirm
+that the server appears as `crosmos` and exposes its memory tools.
 
 ## License
 

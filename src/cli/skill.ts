@@ -4,13 +4,13 @@ import { join } from "node:path";
 import * as p from "./clack.js";
 
 const SKILL_CONTENT = `---
-name: crosmos-memory
-description: Crosmos Memory is a Monotonic Temporal Knowledge Graph (MTKG) for AI agents. Use this skill when building applications that need persistent memory with full temporal history, entity-relationship tracking, or hybrid retrieval (semantic + keyword + graph). Perfect for agents that need to understand relationships between entities, track knowledge evolution over time, and retrieve context with deterministic intent classification.
+name: crosmos
+description: crosmos is a Monotonic Temporal Knowledge Graph (MTKG) for AI agents. Use this skill when building applications that need persistent memory with full temporal history, entity-relationship tracking, or hybrid retrieval (semantic + keyword + graph). Perfect for agents that need to understand relationships between entities, track knowledge evolution over time, and retrieve context with deterministic intent classification.
 ---
 
-# Crosmos Memory — Agent Integration Guide
+# crosmos — Agent Integration Guide
 
-An agent using Crosmos should **automatically** decide whether to store or retrieve based on user intent. The user should never have to explicitly say "remember this" or "search for X".
+An agent using crosmos should **automatically** decide whether to store or retrieve based on user intent. The user should never have to explicitly say "remember this" or "search for X".
 
 ## Auto-Intent Rules
 
@@ -371,7 +371,7 @@ export async function promptSkillInstall(): Promise<void> {
   const detected = detectInstalledClients();
 
   const selectedClients = await p.multiselect({
-    message: "Install Crosmos skill for (Ctrl+C to skip):",
+    message: "Install crosmos skill for (Ctrl+C to skip):",
     options: CLIENT_ORDER.map((id) => {
       const config = CLIENT_CONFIGS[id];
       const isDetected = detected.includes(id);
