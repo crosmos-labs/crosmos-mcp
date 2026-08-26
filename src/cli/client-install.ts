@@ -239,7 +239,7 @@ function mergeJsonConfig(
     try {
       config = JSON.parse(readFileSync(filePath, "utf-8"));
     } catch {
-      config = {};
+      return "error";
     }
   }
 
