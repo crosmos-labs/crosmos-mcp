@@ -56,12 +56,14 @@ For multi-turn conversations, use the messages format:
 \\\`\\\`\\\`json
 {
   "space_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "messages": [
-    {"role": "user", "content": "I just got back from Tokyo"},
-    {"role": "assistant", "content": "How was it?"},
-    {"role": "user", "content": "Amazing, I visited Shibuya and ate at Ichiran ramen"}
-  ],
-  "session_id": "tokyo-trip-2024"
+  "messages": {
+    "messages": [
+      {"role": "user", "content": "I just got back from Tokyo"},
+      {"role": "assistant", "content": "How was it?"},
+      {"role": "user", "content": "Amazing, I visited Shibuya and ate at Ichiran ramen"}
+    ],
+    "session_id": "tokyo-trip-2024"
+  }
 }
 \\\`\\\`\\\`
 
@@ -78,10 +80,8 @@ Retrieve relevant memories using hybrid search (semantic + keyword + graph).
 }
 \\\`\\\`\\\`
 
-Optional parameters:
-- \\\`limit\\\` (1-50, default 10): Number of results
-- \\\`rerank\\\` (boolean, default true): Cross-encoder reranking for precision
-- \\\`graph\\\` (boolean, default true): Include graph traversal signal (disable for faster keyword+semantic only)
+The MCP tool accepts only \\\`query\\\` and optional \\\`space_id\\\`. Result sizing, reranking,
+and graph retrieval are controlled by the server.
 
 ### \\\`crosmos_list_spaces\\\`
 
@@ -250,9 +250,8 @@ Content → Segment (conversations) → Extract memories/entities/relations (LLM
 2. **Use conversations endpoint** for multi-turn chats — it handles segmentation and lookback automatically
 3. **Include session_date** for temporal reasoning — the system extracts relative dates to absolute timestamps
 4. **Poll job status after ingestion** — extraction is async, wait for \\\`status: "completed"\\\` before searching
-5. **Set \\\`graph: false\\\`** on search if you only need keyword+semantic for faster results
-6. **Soft-delete memories** via DELETE — they get \\\`forgotten_at\\\` set, excluded from retrieval but preserved in the graph
-`;
+5. **Soft-delete memories** via DELETE — they get \\\`forgotten_at\\\` set, excluded from retrieval but preserved in the graph
+`.replaceAll("\\`", "`");
 
 export type ClientId =
   | "opencode"
